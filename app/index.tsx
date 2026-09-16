@@ -1,138 +1,291 @@
-import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView, StyleSheet, Text, TouchableOpacity, View,
+} from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-const generos = ["Todos", "Rock", "Trap", "Indie", "Pop", "Rap", "Alternativo"];
-
-const artistas = [
-  { id: "1", nombre: "Luz de Neón", genero: "Indie / Alternativo" },
-  { id: "2", nombre: "Sombra Blanca", genero: "Rock" },
-  { id: "3", nombre: "Kairos", genero: "Trap" },
-  { id: "4", nombre: "Marea Alta", genero: "Indie" },
-];
-
-export default function Explorar() {
-  const [genero, setGenero] = useState("Todos");
-  const [busqueda, setBusqueda] = useState("");
-
-  const resultados = artistas.filter((artista) => {
-    const porGenero =
-      genero === "Todos" ||
-      artista.genero.toLowerCase().includes(genero.toLowerCase());
-
-    const porNombre = artista.nombre
-      .toLowerCase()
-      .includes(busqueda.toLowerCase());
-
-    return porGenero && porNombre;
-  });
-
+export default function Inicio() {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Explorar</Text>
-      <Text style={styles.subtitle}>Encontrá artistas por género.</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}>
 
-      <View style={styles.search}>
-        <Ionicons name="search-outline" size={20} color="#777777" />
-        <TextInput
-          value={busqueda}
-          onChangeText={setBusqueda}
-          placeholder="Buscar artista..."
-          placeholderTextColor="#666666"
-          style={styles.input}
-        />
+
+      <View style={styles.header}>
+
+        <Text style={styles.logo}>
+          GROWING
+        </Text>
+
+        <TouchableOpacity
+          onPress={() => router.push("/perfil")}
+        >
+          <Ionicons
+            name="person-circle-outline"
+            size={34}
+            color="#FFFFFF"
+          />
+        </TouchableOpacity>
+
       </View>
 
-      <Text style={styles.label}>GÉNEROS</Text>
+      <Text style={styles.welcome}>
+        Descubrí lo nuevo.
+      </Text>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {generos.map((item) => (
-          <TouchableOpacity
-            key={item}
-            style={[styles.genre, genero === item && styles.genreActive]}
-            onPress={() => setGenero(item)}
-          >
-            <Text
-              style={[
-                styles.genreText,
-                genero === item && styles.genreTextActive,
-              ]}
-            >
-              {item}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <Text style={styles.subtitle}>
+        Artistas emergentes, en un solo lugar.
+      </Text>
 
-      <Text style={styles.results}>Artistas</Text>
+      <TouchableOpacity
+        style={styles.mainCard}
+        onPress={() => router.push("/artista/1")}
+      >
 
-      {resultados.map((artista) => (
+        <View style={styles.imagePlaceholder}>
+
+          <Ionicons
+            name="musical-notes"
+            size={45}
+            color="#FF2147"/>
+</View>
+
+        <View style={styles.cardText}>
+
+          <Text style={styles.small}>
+            ARTISTA DESTACADO
+          </Text>
+
+          <Text style={styles.artist}>
+            Luz de Neón
+          </Text>
+
+          <Text style={styles.genre}>
+            Indie / Alternativo
+          </Text>
+
+        </View>
+
+        <View style={styles.arrow}>
+
+          <Ionicons
+            name="chevron-forward"
+            size={22}
+            color="#FFFFFF"/>
+</View>
+
+      </TouchableOpacity>
+
+      <View style={styles.titleRow}>
+
+        <Text style={styles.sectionTitle}>
+          Nuevos en la escena
+        </Text>
+
+        <Text style={styles.see}>
+          Ver todos
+        </Text>
+
+      </View>
+
+      <View style={styles.row}>
+
         <TouchableOpacity
-          key={artista.id}
-          style={styles.artistCard}
-          onPress={() => router.push(`/artista/${artista.id}`)}
-        >
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={24} color="#FF2147" />
+          style={styles.smallCard}
+          onPress={() => router.push("/artista/1")}>
+
+          <View style={styles.smallImage}>
+
+            <Ionicons
+              name="person"
+              size={30}
+              color="#FF2147"
+            />
+
           </View>
 
-          <View style={styles.info}>
-            <Text style={styles.name}>{artista.nombre}</Text>
-            <Text style={styles.artistGenre}>{artista.genero}</Text>
-          </View>
+          <Text style={styles.cardName}>
+            Sombra Blanca
+          </Text>
 
-          <Ionicons name="chevron-forward" size={20} color="#777777" />
+          <Text style={styles.cardGenre}>
+            Rock
+          </Text>
+
         </TouchableOpacity>
-      ))}
+
+
+        <TouchableOpacity
+          style={styles.smallCard}
+          onPress={() => router.push("/artista/1")}>
+          <View style={styles.smallImage}>
+
+            <Ionicons
+              name="person"
+              size={30}
+              color="#FF2147"/>
+
+          </View>
+
+          <Text style={styles.cardName}>
+            Kairos
+          </Text>
+
+          <Text style={styles.cardGenre}>
+            Trap
+          </Text>
+
+        </TouchableOpacity>
+
+      </View>
+
     </ScrollView>
   );
 }
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#050505" },
-  content: { padding: 22, paddingTop: 58, paddingBottom: 100 },
-  title: { color: "#FFFFFF", fontSize: 31, fontWeight: "900" },
-  subtitle: { color: "#888888", marginTop: 6, marginBottom: 23 },
-  search: {
-    height: 52,
-    backgroundColor: "#151515",
-    borderRadius: 14,
+
+  container: {
+    flex: 1,
+    backgroundColor: "#050505",
+  },
+
+  content: {
+    padding: 22,
+    paddingTop: 58,
+    paddingBottom: 100,
+  },
+
+  header: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 15,
+    marginBottom: 35,
+  },
+
+  logo: {
+    color: "#FFFFFF",
+    fontSize: 23,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+
+  welcome: {
+    color: "#FFFFFF",
+    fontSize: 34,
+    fontWeight: "900",
+  },
+
+  subtitle: {
+    color: "#888888",
+    fontSize: 14,
+    marginTop: 7,
     marginBottom: 25,
   },
-  input: { flex: 1, color: "#FFFFFF", marginLeft: 9 },
-  label: { color: "#777777", fontSize: 11, fontWeight: "800", marginBottom: 11 },
-  genre: {
-    backgroundColor: "#171717",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+
+  mainCard: {
+    backgroundColor: "#151515",
     borderRadius: 20,
-    marginRight: 8,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#242424",
   },
-  genreActive: { backgroundColor: "#FF2147" },
-  genreText: { color: "#999999", fontWeight: "600" },
-  genreTextActive: { color: "#FFFFFF" },
-  results: { color: "#FFFFFF", fontSize: 20, fontWeight: "800", marginTop: 28, marginBottom: 12 },
-  artistCard: {
-    backgroundColor: "#121212",
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 57,
-    height: 57,
-    borderRadius: 12,
+
+  imagePlaceholder: {
+    height: 190,
     backgroundColor: "#21070C",
     alignItems: "center",
     justifyContent: "center",
   },
-  info: { flex: 1, marginLeft: 13 },
-  name: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
-  artistGenre: { color: "#888888", fontSize: 12, marginTop: 4 },
-});
+
+  cardText: {
+    padding: 17,
+  },
+
+  small: {
+    color: "#FF2147",
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+
+  artist: {
+    color: "#FFFFFF",
+    fontSize: 25,
+    fontWeight: "800",
+    marginTop: 5,
+  },
+
+  genre: {
+    color: "#999999",
+    fontSize: 13,
+    marginTop: 4,
+  },
+
+  arrow: {
+    position: "absolute",
+    right: 16,
+    bottom: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#252525",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 30,
+    marginBottom: 13,
+  },
+
+  sectionTitle: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontWeight: "800",
+  },
+
+  see: {
+    color: "#FF2147",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+
+  row: {
+    flexDirection: "row",
+    gap: 12,
+  },
+
+  smallCard: {
+    flex: 1,
+    backgroundColor: "#121212",
+    borderRadius: 16,
+    padding: 10,
+  },
+
+  smallImage: {
+    height: 115,
+    borderRadius: 12,
+    backgroundColor: "#211014",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  cardName: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    marginTop: 10,
+  },
+
+  cardGenre: {
+    color: "#888888",
+    fontSize: 12,
+    marginTop: 3,
+  },
+
+}); 

@@ -1,136 +1,256 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  StyleSheet, Text, TouchableOpacity, View,
+} from "react-native";
+
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 
-export default function Inicio() {
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.logo}>GROWING</Text>
-        <TouchableOpacity onPress={() => router.push("/perfil")}>
-          <Ionicons name="person-circle-outline" size={34} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+export default function Perfil() {
+return (
 
-      <Text style={styles.welcome}>Descubrí lo nuevo.</Text>
-      <Text style={styles.subtitle}>
-        Artistas emergentes, en un solo lugar.
+  <View style={styles.container}>
+
+      <Text style={styles.title}>
+        Mi perfil
       </Text>
 
-      <TouchableOpacity
-        style={styles.mainCard}
-        onPress={() => router.push("/artista/1")}
-      >
-        <View style={styles.imagePlaceholder}>
-          <Ionicons name="musical-notes" size={45} color="#FF2147" />
+      <View style={styles.profile}>
+
+        <View style={styles.avatar}>
+
+          <Text style={styles.initials}>
+            U
+          </Text>
+
         </View>
 
-        <View style={styles.cardText}>
-          <Text style={styles.small}>ARTISTA DESTACADO</Text>
-          <Text style={styles.artist}>Luz de Neón</Text>
-          <Text style={styles.genre}>Indie / Alternativo</Text>
+
+        <Text style={styles.name}>
+          usuario123
+        </Text>
+
+
+        <Text style={styles.email}>
+          usuario@growing.com
+        </Text>
+
+
+        <TouchableOpacity style={styles.button}>
+
+          <Text style={styles.buttonText}>
+            Editar perfil
+          </Text>
+
+        </TouchableOpacity>
+
+      </View>
+
+      <View style={styles.stats}>
+
+        <View>
+
+          <Text style={styles.number}>
+            5
+          </Text>
+
+          <Text style={styles.statText}>
+            artistas guardados
+          </Text>
+
         </View>
 
-        <View style={styles.arrow}>
-          <Ionicons name="chevron-forward" size={22} color="#FFFFFF" />
+
+        <View>
+
+          <Text style={styles.number}>
+            0
+          </Text>
+
+          <Text style={styles.statText}>
+            seguidores
+          </Text>
+
         </View>
+
+      </View>
+
+      <Text style={styles.section}>
+        Mis géneros
+      </Text>
+
+
+      <View style={styles.genres}>
+
+        <View style={styles.tag}>
+          <Text style={styles.tagText}>
+            Rock
+          </Text>
+        </View>
+
+        <View style={styles.tag}>
+          <Text style={styles.tagText}>
+            Indie
+          </Text>
+        </View>
+
+        <View style={styles.tag}>
+          <Text style={styles.tagText}>
+            Trap
+          </Text>
+        </View>
+
+      </View>
+
+      <TouchableOpacity style={styles.option}>
+
+        <Ionicons
+          name="settings-outline"
+          size={22}
+          color="#FF2147"
+        />
+
+        <Text style={styles.optionText}>
+          Configuración
+        </Text>
+
+        <Ionicons
+          name="chevron-forward"
+          size={18}
+          color="#777777"
+        />
+
       </TouchableOpacity>
 
-      <View style={styles.titleRow}>
-        <Text style={styles.sectionTitle}>Nuevos en la escena</Text>
-        <Text style={styles.see}>Ver todos</Text>
-      </View>
+    </View>
 
-      <View style={styles.row}>
-        <TouchableOpacity
-          style={styles.smallCard}
-          onPress={() => router.push("/artista/1")}
-        >
-          <View style={styles.smallImage}>
-            <Ionicons name="person" size={30} color="#FF2147" />
-          </View>
-          <Text style={styles.cardName}>Sombra Blanca</Text>
-          <Text style={styles.cardGenre}>Rock</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.smallCard}
-          onPress={() => router.push("/artista/1")}
-        >
-          <View style={styles.smallImage}>
-            <Ionicons name="person" size={30} color="#FF2147" />
-          </View>
-          <Text style={styles.cardName}>Kairos</Text>
-          <Text style={styles.cardGenre}>Trap</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
   );
 }
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#050505" },
-  content: { padding: 22, paddingTop: 58, paddingBottom: 100 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 35,
+
+  container: {
+    flex: 1,
+    backgroundColor: "#050505",
+    padding: 22,
+    paddingTop: 58,
   },
-  logo: { color: "#FFFFFF", fontSize: 23, fontWeight: "900", letterSpacing: 1 },
-  welcome: { color: "#FFFFFF", fontSize: 34, fontWeight: "900" },
-  subtitle: { color: "#888888", fontSize: 14, marginTop: 7, marginBottom: 25 },
-  mainCard: {
-    backgroundColor: "#151515",
-    borderRadius: 20,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#242424",
+
+  title: {
+    color: "#FFFFFF",
+    fontSize: 31,
+    fontWeight: "900",
   },
-  imagePlaceholder: {
-    height: 190,
-    backgroundColor: "#21070C",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardText: { padding: 17 },
-  small: { color: "#FF2147", fontSize: 10, fontWeight: "800", letterSpacing: 1 },
-  artist: { color: "#FFFFFF", fontSize: 25, fontWeight: "800", marginTop: 5 },
-  genre: { color: "#999999", fontSize: 13, marginTop: 4 },
-  arrow: {
-    position: "absolute",
-    right: 16,
-    bottom: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#252525",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  titleRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+
+  profile: {
     alignItems: "center",
     marginTop: 30,
-    marginBottom: 13,
   },
-  sectionTitle: { color: "#FFFFFF", fontSize: 19, fontWeight: "800" },
-  see: { color: "#FF2147", fontSize: 12, fontWeight: "700" },
-  row: { flexDirection: "row", gap: 12 },
-  smallCard: {
-    flex: 1,
-    backgroundColor: "#121212",
-    borderRadius: 16,
-    padding: 10,
-  },
-  smallImage: {
-    height: 115,
-    borderRadius: 12,
-    backgroundColor: "#211014",
+
+  avatar: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: "#21070C",
+    borderWidth: 1,
+    borderColor: "#FF2147",
     alignItems: "center",
     justifyContent: "center",
   },
-  cardName: { color: "#FFFFFF", fontWeight: "700", marginTop: 10 },
-  cardGenre: { color: "#888888", fontSize: 12, marginTop: 3 },
+
+  initials: {
+    color: "#FF2147",
+    fontSize: 30,
+    fontWeight: "900",
+  },
+
+  name: {
+    color: "#FFFFFF",
+    fontSize: 21,
+    fontWeight: "800",
+    marginTop: 13,
+  },
+
+  email: {
+    color: "#777777",
+    marginTop: 4,
+  },
+
+  button: {
+    borderWidth: 1,
+    borderColor: "#444444",
+    borderRadius: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+    marginTop: 14,
+  },
+
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+  },
+
+  stats: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: "#222222",
+    paddingVertical: 18,
+    marginTop: 28,
+  },
+
+  number: {
+    color: "#FFFFFF",
+    textAlign: "center",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+
+  statText: {
+    color: "#777777",
+    fontSize: 11,
+    marginTop: 4,
+  },
+
+  section: {
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontWeight: "800",
+    marginTop: 28,
+    marginBottom: 12,
+  },
+
+  genres: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  tag: {
+    backgroundColor: "#171717",
+    borderRadius: 18,
+    paddingHorizontal: 15,
+    paddingVertical: 9,
+  },
+
+  tagText: {
+    color: "#BBBBBB",
+    fontWeight: "600",
+  },
+
+  option: {
+    backgroundColor: "#121212",
+    borderRadius: 15,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 25,
+  },
+
+  optionText: {
+    color: "#FFFFFF",
+    flex: 1,
+    marginLeft: 12,
+    fontWeight: "600",
+  },
+
 });
