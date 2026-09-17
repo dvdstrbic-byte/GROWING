@@ -11,7 +11,7 @@ export default function Artista() {
 
 
       <View style={styles.cover}>
-      <Image source={require("../../assets/luzdeneon.png")} style={styles.artistImage}/>
+<Image source={require("../../../assets/images/luzdeneon.png")} style={styles.artistImage}/>
       </View>
 
       <Text style={styles.name}>

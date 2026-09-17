@@ -1,99 +1,63 @@
-import { useState } from "react";
-
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { API_URL } from "../../config";
 
-
-const generos = [
-  "Todos",
-  "Rock",
-  "Trap",
-  "Indie",
-  "Pop",
-  "Rap",
-  "Alternativo",
-];
-
-
-const artistas = [
-  {
-    id: "1",
-    nombre: "Luz de Neón",
-    genero: "Indie / Alternativo",
-  },
-
-  {
-    id: "2",
-    nombre: "Sombra Blanca",
-    genero: "Rock",
-  },
-
-  {
-    id: "3",
-    nombre: "Kairos",
-    genero: "Trap",
-  },
-
-  {
-    id: "4",
-    nombre: "Marea Alta",
-    genero: "Indie",
-  },
-];
-
+const generos = ["Todos","Rock","Trap","Indie","Pop","Rap","Alternativo",];
 
 export default function Explorar() {
+  const[genero, setGenero]=useState("Todos");
+  const[busqueda, setBusqueda]=useState("");
+  const[artistas, setArtistas]=useState<any[]>([]);
+  const[cargando, setCargando]= useState(true);
 
-  const [genero, setGenero] = useState("Todos");
+  useEffect(()=>{
+    obtenerArtistas();
+  }, []);
 
-  const [busqueda, setBusqueda] = useState("");
+  const obtenerArtistas=async()=>{
+    
+    try{
+      const respuesta=await fetch(`${API_URL}/artistas`);
+      const datos=await respuesta.json();
+      setArtistas(datos);
+
+    }catch(error){ 
+      console.log("Error al obtener artistas:");
+      console.log(error);
+    }
+    setCargando(false);
+  };
 
 
-  const resultados = artistas.filter((artista) => {
+  const resultados=artistas.filter((artista)=>{
 
-    const porGenero =
-      genero === "Todos" ||
-      artista.genero
-        .toLowerCase()
-        .includes(genero.toLowerCase());
+    const porGenero=genero==="Todos" || artista.genero.toLowerCase().includes(genero.toLowerCase());
 
-
-    const porNombre =
-      artista.nombre
-        .toLowerCase()
-        .includes(busqueda.toLowerCase());
-
-
+    const porNombre=artista.nombre_artistico.toLowerCase().includes(busqueda.toLowerCase());
     return porGenero && porNombre;
-
   });
 
-
-  return (
+  return(
 
     <ScrollView
       style={styles.container}
-      contentContainerStyle={styles.content}
-    >
+      contentContainerStyle={styles.content}>
 
       <Text style={styles.title}>
         Explorar
       </Text>
 
       <Text style={styles.subtitle}>
-        Encontrá artistas por género.
-      </Text>
-
-
+        Encontrá artistas por género.</Text>
 
       <View style={styles.search}>
 
         <Ionicons
           name="search-outline"
           size={20}
-          color="#777777" />
+          color="#777777"/>
 
         <TextInput
           value={busqueda}
@@ -101,7 +65,6 @@ export default function Explorar() {
           placeholder="Buscar artista..."
           placeholderTextColor="#666666"
           style={styles.input}/>
-
       </View>
 
       <Text style={styles.label}>
@@ -130,18 +93,32 @@ export default function Explorar() {
               ]}>
               {item}
             </Text>
-
           </TouchableOpacity>
         ))}
-
       </ScrollView>
 
+
       <Text style={styles.results}>
-        Artistas
-      </Text>
+        Artistas</Text>
+      {cargando && (
+        <Text style={styles.message}>
+          Cargando artistas...</Text>
+      )}
 
+      {!cargando && resultados.length === 0 && (
 
-      {resultados.map((artista) => (
+        <View style={styles.empty}>
+          <Ionicons
+            name="people-outline"
+            size={40}
+            color="#555555"/>
+
+          <Text style={styles.message}>
+            Todavía no hay artistas registrados.</Text>
+          </View>
+)}
+
+      {!cargando && resultados.map((artista) => (
 
         <TouchableOpacity
           key={artista.id}
@@ -151,44 +128,36 @@ export default function Explorar() {
           }>
 
           <View style={styles.avatar}>
-
             <Ionicons
               name="person"
               size={24}
-              color="#FF2147"/>
-
+              color="#FF2147"
+            />
           </View>
 
-
           <View style={styles.info}>
-
             <Text style={styles.name}>
-              {artista.nombre}
+              {artista.nombre_artistico}
             </Text>
 
             <Text style={styles.artistGenre}>
               {artista.genero}
             </Text>
-
           </View>
-
 
           <Ionicons
             name="chevron-forward"
             size={20}
-            color="#777777"/>
-
+            color="#777777"
+          />
         </TouchableOpacity>
-
       ))}
-
     </ScrollView>
-
   );
 }
 
 
-const styles = StyleSheet.create({
+const styles=StyleSheet.create({
 
   container: {
     flex: 1,
@@ -300,4 +269,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  empty: {
+    alignItems: "center",
+    marginTop: 40,
+  },
+
+  message: {
+    color: "#777777",
+    textAlign: "center",
+    marginTop: 10,
+  },
 });

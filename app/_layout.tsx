@@ -1,73 +1,31 @@
-import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 
-export default function Layout() {
+function RutasProtegidas() {
+  const { usuario, cargando } = useAuth();
+
+  if (cargando) {
+    return null;
+  }
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#FF2147",
-        tabBarInactiveTintColor: "#777777",
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Protected guard={!!usuario}>
+        <Stack.Screen name="(tabs)" />
+      </Stack.Protected>
 
-        tabBarStyle: {
-          backgroundColor: "#050505",
-          borderTopColor: "#222222",
-          height: 68,
-          paddingTop: 7,
-          paddingBottom: 8,
-        },
-      }}
-    >
+      <Stack.Protected guard={!usuario}>
+        <Stack.Screen name="login" />
+        <Stack.Screen name="registro" />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Inicio",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="home-outline"
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="explorar"
-        options={{
-          title: "Explorar",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="search-outline"
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="perfil"
-        options={{
-          title: "Perfil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="person-outline"
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="artista/[id]"
-        options={{
-          href: null,
-        }}
-      />
-
-    </Tabs>
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RutasProtegidas />
+    </AuthProvider>
   );
 }
