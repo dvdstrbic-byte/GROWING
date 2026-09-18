@@ -1,150 +1,64 @@
-import { StyleSheet, Text, TouchableOpacity, View, } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useAuth } from "../../context/AuthContext";
 
-export default function Perfil() {
-return (
+export default function Perfil(){
+  const{usuario, logout}=useAuth();
 
-  <View style={styles.container}>
+  async function cerrarSesion(){
+    await logout();
+  }
 
-      <Text style={styles.title}>
-        Mi perfil
-      </Text>
+  return(
+    <View style={styles.container}>
+      <Text style={styles.title}>Mi perfil</Text>
 
       <View style={styles.profile}>
-
         <View style={styles.avatar}>
-
           <Text style={styles.initials}>
-            U
+            {usuario?.nombre.charAt(0).toUpperCase()}
           </Text>
-
         </View>
 
-
-        <Text style={styles.name}>
-          usuario123
-        </Text>
-
-
-        <Text style={styles.email}>
-          usuario@growing.com
-        </Text>
-
-
-        <TouchableOpacity style={styles.button}>
-
-          <Text style={styles.buttonText}>
-            Editar perfil
-          </Text>
-
-        </TouchableOpacity>
-
-      </View>
-
-      <View style={styles.stats}>
-
-        <View>
-
-          <Text style={styles.number}>
-            5
-          </Text>
-
-          <Text style={styles.statText}>
-            artistas guardados
-          </Text>
-
-        </View>
-
-
-        <View>
-
-          <Text style={styles.number}>
-            0
-          </Text>
-
-          <Text style={styles.statText}>
-            seguidores
-          </Text>
-
-        </View>
-
-      </View>
-
-      <Text style={styles.section}>
-        Mis géneros
-      </Text>
-
-
-      <View style={styles.genres}>
+        <Text style={styles.name}>{usuario?.nombre}</Text>
+        <Text style={styles.email}>{usuario?.email}</Text>
 
         <View style={styles.tag}>
           <Text style={styles.tagText}>
-            Rock
+            {usuario?.rol==="artista" ? "Artista" : "Oyente"}
           </Text>
         </View>
-
-        <View style={styles.tag}>
-          <Text style={styles.tagText}>
-            Indie
-          </Text>
-        </View>
-
-        <View style={styles.tag}>
-          <Text style={styles.tagText}>
-            Trap
-          </Text>
-        </View>
-
       </View>
 
-      <TouchableOpacity style={styles.option}>
-
-        <Ionicons
-          name="settings-outline"
-          size={22}
-          color="#FF2147"
-        />
-
-        <Text style={styles.optionText}>
-          Configuración
-        </Text>
-
-        <Ionicons
-          name="chevron-forward"
-          size={18}
-          color="#777777"
-        />
-
+      <TouchableOpacity style={styles.option} onPress={cerrarSesion}>
+        <Ionicons name="log-out-outline" size={22} color="#FF2147" />
+        <Text style={styles.optionText}>Cerrar sesión</Text>
+        <Ionicons name="chevron-forward" size={18} color="#777777" />
       </TouchableOpacity>
-
     </View>
-
   );
 }
 
-
-const styles = StyleSheet.create({
-
-  container: {
+const styles=StyleSheet.create({
+  container:{
     flex: 1,
     backgroundColor: "#050505",
     padding: 22,
     paddingTop: 58,
   },
 
-  title: {
+  title:{
     color: "#FFFFFF",
     fontSize: 31,
     fontWeight: "900",
   },
 
-  profile: {
+  profile:{
     alignItems: "center",
     marginTop: 30,
   },
 
-  avatar: {
+  avatar:{
     width: 88,
     height: 88,
     borderRadius: 44,
@@ -155,100 +69,50 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  initials: {
+  initials:{
     color: "#FF2147",
     fontSize: 30,
     fontWeight: "900",
   },
 
-  name: {
+  name:{
     color: "#FFFFFF",
     fontSize: 21,
     fontWeight: "800",
     marginTop: 13,
   },
 
-  email: {
+  email:{
     color: "#777777",
     marginTop: 4,
   },
 
-  button: {
-    borderWidth: 1,
-    borderColor: "#444444",
-    borderRadius: 18,
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    marginTop: 14,
-  },
-
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-  },
-
-  stats: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: "#222222",
-    paddingVertical: 18,
-    marginTop: 28,
-  },
-
-  number: {
-    color: "#FFFFFF",
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-
-  statText: {
-    color: "#777777",
-    fontSize: 11,
-    marginTop: 4,
-  },
-
-  section: {
-    color: "#FFFFFF",
-    fontSize: 19,
-    fontWeight: "800",
-    marginTop: 28,
-    marginBottom: 12,
-  },
-
-  genres: {
-    flexDirection: "row",
-    gap: 8,
-  },
-
-  tag: {
+  tag:{
     backgroundColor: "#171717",
     borderRadius: 18,
     paddingHorizontal: 15,
     paddingVertical: 9,
+    marginTop: 16,
   },
 
-  tagText: {
+  tagText:{
     color: "#BBBBBB",
     fontWeight: "600",
   },
 
-  option: {
+  option:{
     backgroundColor: "#121212",
     borderRadius: 15,
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 25,
+    marginTop: 35,
   },
 
-  optionText: {
+  optionText:{
     color: "#FFFFFF",
     flex: 1,
     marginLeft: 12,
     fontWeight: "600",
   },
-
 });

@@ -22,7 +22,9 @@ app.get("/usuarios", (req, res) => {
 });
 
 app.get("/artistas", (req, res) => {
-    const sql = `SELECT id, usuario_id, nombre_artistico, descripcion, genero FROM artistas`;
+    const sql = `SELECT artistas.id, artistas.usuario_id, artistas.nombre_artistico, artistas.descripcion, generos.nombre AS genero FROM artistas
+        LEFT JOIN generos ON artistas.genero_id = generos.id`;
+
     conexion.query(sql, (error, resultados) => {
         if (error) {
             console.log(error);

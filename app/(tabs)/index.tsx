@@ -1,10 +1,33 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
-
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { API_URL } from "../../config";
 
-export default function Inicio() {
-  return (
+export default function Inicio(){
+  const [artistas, setArtistas]=useState<any[]>([]);
+  const [cargando, setCargando]=useState(true);
+
+  useEffect(()=>{
+    obtenerArtistas();
+  }, []);
+
+  const obtenerArtistas = async()=>{
+    try{
+      const respuesta =await fetch(`${API_URL}/artistas`);
+      const datos=await respuesta.json();
+      setArtistas(datos);
+    }catch(error){
+      console.log("Error al obtener artistas:");
+      console.log(error);
+    }
+    setCargando(false);
+  };
+
+  const destacado=artistas[0];
+  const nuevos=artistas.slice(1, 3);
+
+  return(
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}>
@@ -17,7 +40,7 @@ export default function Inicio() {
         </Text>
 
         <TouchableOpacity
-          onPress={() => router.push("/perfil")}
+          onPress={()=>router.push("/perfil")}
         >
           <Ionicons
             name="person-circle-outline"
@@ -36,107 +59,114 @@ export default function Inicio() {
         Artistas emergentes, en un solo lugar.
       </Text>
 
-      <TouchableOpacity
-        style={styles.mainCard}
-        onPress={() => router.push("/artista/1")}
-      >
+      {cargando &&(
+        <Text style={styles.message}>
+          Cargando artistas...
+        </Text>
+      )}
 
-        <View style={styles.imagePlaceholder}>
-
+      {!cargando && !destacado &&(
+        <View style={styles.empty}>
           <Ionicons
-            name="musical-notes"
-            size={45}
-            color="#FF2147"/>
-</View>
-
-        <View style={styles.cardText}>
-
-          <Text style={styles.small}>
-            ARTISTA DESTACADO
+            name="people-outline"
+            size={40}
+            color="#555555"
+          />
+          <Text style={styles.message}>
+            Todavía no hay artistas registrados.
           </Text>
-
-          <Text style={styles.artist}>
-            Luz de Neón
-          </Text>
-
-          <Text style={styles.genre}>
-            Indie / Alternativo
-          </Text>
-
         </View>
+      )}
 
-        <View style={styles.arrow}>
-
-          <Ionicons
-            name="chevron-forward"
-            size={22}
-            color="#FFFFFF"/>
-</View>
-
-      </TouchableOpacity>
-
-      <View style={styles.titleRow}>
-
-        <Text style={styles.sectionTitle}>
-          Nuevos en la escena
-        </Text>
-
-        <Text style={styles.see}>
-          Ver todos
-        </Text>
-
-      </View>
-
-      <View style={styles.row}>
-
+      {!cargando && destacado && (
         <TouchableOpacity
-          style={styles.smallCard}
-          onPress={() => router.push("/artista/1")}>
+          style={styles.mainCard}
+          onPress={() => router.push(`/artista/${destacado.id}`)}
+        >
 
-          <View style={styles.smallImage}>
+          <View style={styles.imagePlaceholder}>
 
             <Ionicons
-              name="person"
-              size={30}
-              color="#FF2147"
-            />
-
-          </View>
-
-          <Text style={styles.cardName}>
-            Sombra Blanca
-          </Text>
-
-          <Text style={styles.cardGenre}>
-            Rock
-          </Text>
-
-        </TouchableOpacity>
-
-
-        <TouchableOpacity
-          style={styles.smallCard}
-          onPress={() => router.push("/artista/1")}>
-          <View style={styles.smallImage}>
-
-            <Ionicons
-              name="person"
-              size={30}
+              name="musical-notes"
+              size={45}
               color="#FF2147"/>
+          </View>
+
+          <View style={styles.cardText}>
+
+            <Text style={styles.small}>
+              ARTISTA DESTACADO
+            </Text>
+
+            <Text style={styles.artist}>
+              {destacado.nombre_artistico}
+            </Text>
+
+            <Text style={styles.genre}>
+              {destacado.genero}
+            </Text>
 
           </View>
 
-          <Text style={styles.cardName}>
-            Kairos
-          </Text>
+          <View style={styles.arrow}>
 
-          <Text style={styles.cardGenre}>
-            Trap
-          </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={22}
+              color="#FFFFFF"/>
+            </View>
 
         </TouchableOpacity>
+      )}
 
-      </View>
+      {!cargando && nuevos.length > 0 && (
+        <>
+          <View style={styles.titleRow}>
+
+            <Text style={styles.sectionTitle}>
+              Nuevos en la escena
+            </Text>
+
+            <TouchableOpacity onPress={() => router.push("/explorar")}>
+              <Text style={styles.see}>
+                Ver todos
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+
+          <View style={styles.row}>
+
+            {nuevos.map((artista) => (
+              <TouchableOpacity
+                key={artista.id}
+                style={styles.smallCard}
+                onPress={() => router.push(`/artista/${artista.id}`)}>
+
+                <View style={styles.smallImage}>
+
+                  <Ionicons
+                    name="person"
+                    size={30}
+                    color="#FF2147"
+                  />
+
+                </View>
+
+                <Text style={styles.cardName}>
+                  {artista.nombre_artistico}
+                </Text>
+
+                <Text style={styles.cardGenre}>
+                  {artista.genero}
+                </Text>
+
+              </TouchableOpacity>
+            ))}
+
+          </View>
+        </>
+      )}
 
     </ScrollView>
   );
@@ -181,6 +211,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 7,
     marginBottom: 25,
+  },
+
+  message: {
+    color: "#777777",
+    textAlign: "center",
+    marginTop: 10,
+  },
+
+  empty: {
+    alignItems: "center",
+    marginTop: 20,
   },
 
   mainCard: {
@@ -286,4 +327,4 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 
-}); 
+});
