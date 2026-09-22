@@ -3,45 +3,87 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { API_URL } from "../../../config";
+import { useAuth } from "../../../context/AuthContext";
 
-export default function Artista() {
-  const { id } = useLocalSearchParams();
+export default function Artista(){
+  const {id}=useLocalSearchParams();
+  const {usuario}=useAuth();
 
-  const [seguido, setSeguido] = useState(false);
-  const [artista, setArtista] = useState<any>(null);
-  const [canciones, setCanciones] = useState<any[]>([]);
-  const [cargando, setCargando] = useState(true);
+  const [seguido, setSeguido]=useState(false);
+  const [artista, setArtista]=useState<any>(null);
+  const [canciones, setCanciones]=useState<any[]>([]);
+  const [cargando, setCargando]=useState(true);
 
-  useEffect(() => {
+  useEffect(()=>{
     obtenerArtista();
     obtenerCanciones();
+    obtenerEstadoSeguimiento();
   }, [id]);
 
-  const obtenerArtista = async () => {
-    try {
-      const respuesta = await fetch(`${API_URL}/artistas/${id}`);
-      const datos = await respuesta.json();
+  const obtenerArtista=async()=>{
+    try{
+      const respuesta=await fetch(`${API_URL}/artistas/${id}`);
+      const datos=await respuesta.json();
 
-      if (respuesta.ok) {
+      if(respuesta.ok){
         setArtista(datos);
       }
-    } catch (error) {
+    }catch(error){
       console.log("Error al obtener artista:");
       console.log(error);
     }
     setCargando(false);
   };
 
-  const obtenerCanciones = async () => {
-    try {
-      const respuesta = await fetch(`${API_URL}/artistas/${id}/canciones`);
-      const datos = await respuesta.json();
+  const obtenerCanciones=async()=>{
+    try{
+      const respuesta=await fetch(`${API_URL}/artistas/${id}/canciones`);
+      const datos=await respuesta.json();
 
-      if (Array.isArray(datos)) {
+      if(Array.isArray(datos)){
         setCanciones(datos);
       }
     } catch (error) {
       console.log("Error al obtener canciones:");
+      console.log(error);
+    }
+  };
+
+  const obtenerEstadoSeguimiento=async()=>{
+    if(!usuario) return;
+
+    try{
+      const respuesta=await fetch(`${API_URL}/seguidores/estado/${usuario.id}/${id}`);
+      const datos=await respuesta.json();
+      setSeguido(datos.siguiendo);
+    }catch (error){
+      console.log("Error al consultar seguimiento:");
+      console.log(error);
+    }
+  };
+
+  const alternarSeguir=async()=>{
+    if(!usuario) return;
+
+    try{
+      if(seguido){
+        await fetch(`${API_URL}/seguidores`,{
+          method: "DELETE",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({usuarioId: usuario.id, artistaId: id}),
+        });
+      }else{
+        await fetch(`${API_URL}/seguidores`,{
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({usuarioId: usuario.id, artistaId: id}),
+        });
+      }
+
+      setSeguido(!seguido);
+      obtenerArtista();
+    } catch (error) {
+      console.log("Error al cambiar seguimiento:");
       console.log(error);
     }
   };
@@ -84,11 +126,8 @@ export default function Artista() {
       ) : null}
 
       <TouchableOpacity
-        style={[
-          styles.follow,
-          seguido && styles.followed,
-        ]}
-        onPress={()=>setSeguido(!seguido)}
+        style={[styles.follow, seguido && styles.followed,]}
+        onPress={alternarSeguir}
       >
 
         <Ionicons
@@ -146,9 +185,7 @@ export default function Artista() {
   );
 }
 
-
 const styles=StyleSheet.create({
-
   container:{
     flex: 1,
     backgroundColor: "#050505",
@@ -263,4 +300,9 @@ escucharText: {
     fontWeight: "600",
   },
 
+  seguidoresCount:{
+  color: "#777777",
+  fontSize: 13,
+  marginTop: 6,
+},
 });

@@ -14,9 +14,13 @@ type AuthContextType={
   usuario: Usuario | null;
   cargando: boolean;
   login:(email: string, password: string)=>Promise<void>;
-  registro:(nombre: string, email: string, password: string, rol: string,
-            datosArtista?:{nombreArtistico: string; descripcion: string; generoId: number; linkMusica: string}
-  )=>Promise<void>;
+  registro:(
+    nombre: string, 
+    email: string, 
+    password: string, 
+    rol: string,
+    datosArtista?:{nombreArtistico: string; descripcion: string; generoId: number; linkMusica: string; canciones: string[];      
+    })=>Promise<void>;
   logout:()=>Promise<void>;
 };
 
@@ -33,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
         if(usuarioGuardado){
           setUsuario(JSON.parse(usuarioGuardado));
         }
-      }catch (error){
+      }catch(error){
         console.log("Error al cargar sesión:", error);
       }finally{
         setCargando(false);
@@ -64,8 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
     await guardarSesion(datos.usuario);
   }
 
-  async function registro(nombre: string, email: string, password: string, rol: string,
-                datosArtista?:{ nombreArtistico: string; descripcion: string; generoId: number, linkMusica: string }){
+  async function registro(
+    nombre: string, 
+    email: string, 
+    password: string, 
+    rol: string,
+    datosArtista?:{nombreArtistico: string; descripcion: string; generoId: number, linkMusica: string; canciones: string[];}){
+  
   const respuesta=await fetch(`${API_URL}/registro`,{
     method: "POST",
     headers:{ "Content-Type": "application/json" },
@@ -78,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
       descripcion: datosArtista?.descripcion,
       generoId: datosArtista?.generoId,
       linkMusica: datosArtista?.linkMusica,
+      canciones: datosArtista?.canciones,
     }),
   });
 

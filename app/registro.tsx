@@ -17,7 +17,8 @@ export default function Registro(){
   const[descripcion, setDescripcion]=useState("");
   const[generos, setGeneros]=useState<any[]>([]);
   const[generoId, setGeneroId]=useState<number | null>(null);
-  const [linkMusica, setLinkMusica] = useState("");
+  const[linkMusica, setLinkMusica]=useState("");
+  const[temasSugeridos, setTemasSugeridos]=useState(["", "", ""]);
 
   useEffect(()=>{
     obtenerGeneros();
@@ -67,6 +68,7 @@ export default function Registro(){
           descripcion,
           generoId: generoId!,
           linkMusica,
+          canciones: temasSugeridos,
         });
       }else{
         await registro(nombre, email, password, rol);
@@ -77,6 +79,12 @@ export default function Registro(){
       setCargando(false);
     }
   }
+
+  function actualizarTema(indice: number, texto: string) {
+  const copia = [...temasSugeridos];
+  copia[indice] = texto;
+  setTemasSugeridos(copia);
+}
 
   return(
     <KeyboardAvoidingView
@@ -188,6 +196,19 @@ export default function Registro(){
             onChangeText={setLinkMusica}
             autoCapitalize="none"
             />
+
+            <Text style={styles.label}>TEMAS SUGERIDOS (OPCIONAL)</Text>
+
+            {[0, 1, 2].map((i)=>(
+            <TextInput
+            key={i}
+            style={styles.input}
+            placeholder={`Tema ${i + 1}`}
+            placeholderTextColor="#666666"
+            value={temasSugeridos[i]}
+            onChangeText={(texto)=>actualizarTema(i, texto)}
+            />
+          ))}
 
             {generos.length===0 &&(
               <Text style={styles.avisoGeneros}>

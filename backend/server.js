@@ -44,17 +44,18 @@ app.get("/generos", (req, res)=>{
     });
 });
 
-app.get("/artistas/:id", (req, res) => {
-    const { id } = req.params;
+app.get("/artistas/:id", (req, res)=>{
+    const{id}=req.params;
 
-    const sql = `
+    const sql= `
         SELECT 
             artistas.id, 
             artistas.usuario_id, 
             artistas.nombre_artistico, 
             artistas.descripcion, 
             artistas.link_musica,
-            generos.nombre AS genero
+            generos.nombre AS genero,
+            (SELECT COUNT(*) FROM seguidores WHERE seguidores.artista_id = artistas.id) AS cantidad_seguidores
         FROM artistas
         LEFT JOIN generos ON artistas.genero_id = generos.id
         WHERE artistas.id = ?
@@ -91,7 +92,7 @@ app.get("/artistas/:id/canciones",(req, res)=>{
 });
 
 app.post("/registro",(req, res)=>{
-    const{ nombre, email, password, rol, nombreArtistico, descripcion, generoId, linkMusica } = req.body;
+    const{ nombre, email, password, rol, nombreArtistico, descripcion, generoId, linkMusica, canciones } = req.body;
 
 if(!nombre || !email || !password){
      return res.status(400).json({error: "Faltan datos obligatorios"});
@@ -125,16 +126,31 @@ if(resultados.length>0){
 
 const nuevoUsuarioId=resultado.insertId;
 
- if(rol === "artista"){
+ if(rol==="artista"){
     conexion.query(
      "INSERT INTO artistas (usuario_id, nombre_artistico, descripcion, genero_id, link_musica) VALUES (?, ?, ?, ?, ?)",
     [nuevoUsuarioId, nombreArtistico, descripcion || "", generoId, linkMusica || null],
-        (error)=>{
+        (error, resultadoArtista)=>{
     
     if(error){
       console.log(error);
     return res.status(500).json({error: "Error al crear el perfil de artista"});
-        }
+  }
+
+const nuevoArtistaId=resultadoArtista.insertId;
+    
+    if(Array.isArray(canciones)){
+        canciones
+          .filter((titulo)=>titulo && titulo.trim() !== "")
+          .forEach((titulo)=>{
+        conexion.query(
+            "INSERT INTO canciones (artista_id, titulo) VALUES (?, ?)",
+        [nuevoArtistaId, titulo],
+        (error)=>{
+         if (error) console.log("Error al guardar tema sugerido:", error);
+        });
+    });
+}
 
 res.status(201).json({
     mensaje: "Usuario creado",
@@ -183,6 +199,64 @@ if(resultados.length===0){
             });
         });
 });
+
+
+app.post("/seguidores",(req, res)=>{
+    const{usuarioId, artistaId}=req.body;
+
+    if(!usuarioId || !artistaId){
+        return res.status(400).json({error: "Faltan datos"});
+    }
+
+    conexion.query(
+        "INSERT INTO seguidores (usuario_id, artista_id) VALUES (?, ?)",
+        [usuarioId, artistaId],
+        (error)=>{
+            if(error){
+                if(error.code==="ER_DUP_ENTRY"){
+                    return res.status(200).json({mensaje: "Ya seguís a este artista"});
+                }
+                console.log(error);
+                return res.status(500).json({error: "Error al seguir al artista"});
+            }
+            res.status(201).json({mensaje: "Ahora seguís a este artista"});
+        });
+    });
+
+
+app.delete("/seguidores", (req, res)=>{
+    const {usuarioId, artistaId }=req.body;
+
+    if(!usuarioId || !artistaId){
+        return res.status(400).json({error: "Faltan datos"});
+    }
+
+    conexion.query(
+        "DELETE FROM seguidores WHERE usuario_id = ? AND artista_id = ?",
+        [usuarioId, artistaId],
+        (error)=>{
+            if(error){
+                console.log(error);
+                return res.status(500).json({error: "Error al dejar de seguir"});
+            }
+            res.json({mensaje: "Dejaste de seguir a este artista"});
+        });
+    });
+
+app.get("/seguidores/estado/:usuarioId/:artistaId",(req, res)=>{
+    const {usuarioId, artistaId}=req.params;
+
+    conexion.query(
+        "SELECT id FROM seguidores WHERE usuario_id = ? AND artista_id = ?",
+        [usuarioId, artistaId],
+        (error, resultados)=>{
+            if(error){
+                console.log(error);
+                return res.status(500).json({error: "Error al consultar"});
+            }
+            res.json({siguiendo: resultados.length>0});
+        });
+    });
 
 app.listen(3000, "0.0.0.0",()=>{
     console.log("Servidor funcionando en el puerto 3000");
