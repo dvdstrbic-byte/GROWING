@@ -1,36 +1,87 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { API_URL } from "../../../config";
 
 export default function Artista() {
-  const [seguido, setSeguido] = useState(false);
+  const { id } = useLocalSearchParams();
 
+  const [seguido, setSeguido] = useState(false);
+  const [artista, setArtista] = useState<any>(null);
+  const [canciones, setCanciones] = useState<any[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    obtenerArtista();
+    obtenerCanciones();
+  }, [id]);
+
+  const obtenerArtista = async () => {
+    try {
+      const respuesta = await fetch(`${API_URL}/artistas/${id}`);
+      const datos = await respuesta.json();
+
+      if (respuesta.ok) {
+        setArtista(datos);
+      }
+    } catch (error) {
+      console.log("Error al obtener artista:");
+      console.log(error);
+    }
+    setCargando(false);
+  };
+
+  const obtenerCanciones = async () => {
+    try {
+      const respuesta = await fetch(`${API_URL}/artistas/${id}/canciones`);
+      const datos = await respuesta.json();
+
+      if (Array.isArray(datos)) {
+        setCanciones(datos);
+      }
+    } catch (error) {
+      console.log("Error al obtener canciones:");
+      console.log(error);
+    }
+  };
+
+  if (cargando) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>Cargando artista...</Text>
+      </View>
+    );
+  }
+
+  if (!artista) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>No se encontró el artista.</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
-
       <View style={styles.cover}>
-<Image source={require("../../../assets/images/luzdeneon.png")} style={styles.artistImage}/>
+        <Ionicons name="musical-notes" size={50} color="#FF2147" />
       </View>
 
       <Text style={styles.name}>
-        Luz de Neón
+        {artista.nombre_artistico}
       </Text>
-
 
       <Text style={styles.genre}>
-        INDIE / ALTERNATIVO
+        {artista.genero?.toUpperCase() || "SIN GÉNERO"}
       </Text>
 
-
-      {/* DESCRIPCION */}
-
-      <Text style={styles.description}>
-        Artista independiente de Buenos Aires.
-        Una propuesta que combina sonidos
-        alternativos con una estética moderna.
-      </Text>
+      {artista.descripcion ? (
+        <Text style={styles.description}>
+          {artista.descripcion}
+        </Text>
+      ) : null}
 
       <TouchableOpacity
         style={[
@@ -41,81 +92,44 @@ export default function Artista() {
       >
 
         <Ionicons
-          name={
-            seguido
-              ? "checkmark"
-              : "heart-outline"
-          }
+          name={seguido ? "checkmark" : "heart-outline"}
           size={18}
           color="#FFFFFF"
         />
 
         <Text style={styles.followText}>
-
-          {seguido
-            ? "Siguiendo"
-            : "Seguir artista"}
-
+          {seguido ? "Siguiendo" : "Seguir artista"}
         </Text>
 
       </TouchableOpacity>
 
-
-      <Text style={styles.section}>
-        Canciones
-      </Text>
-
-
-      {[
-        "Cerca de acá",
-        "Luces de ciudad",
-        "Después de las doce",
-      ].map((cancion, index) => (
-
-        <View
-          style={styles.song}
-          key={cancion}
-        >
-
-          <Text style={styles.songNumber}>
-            {index + 1}
+      {canciones.length > 0 && (
+        <>
+          <Text style={styles.section}>
+            Canciones
           </Text>
 
-          <Text style={styles.songName}>
-            {cancion}
-          </Text>
+          {canciones.map((cancion, index) => (
+            <View style={styles.song} key={cancion.id}>
 
-          <Ionicons
-            name="play-circle-outline"
-            size={27}
-            color="#FF2147"
-          />
+              <Text style={styles.songNumber}>
+                {index + 1}
+              </Text>
 
-        </View>
+              <Text style={styles.songName}>
+                {cancion.titulo}
+              </Text>
 
-      ))}
+              <Ionicons
+                name="play-circle-outline"
+                size={27}
+                color="#FF2147"
+              />
 
-
-      <Text style={styles.section}>
-        Información
-      </Text>
-
-
-      <View style={styles.info}>
-
-        <Text style={styles.infoText}>
-          📍 Buenos Aires
-        </Text>
-
-        <Text style={styles.infoText}>
-          🎵 Indie / Alternativo
-        </Text>
-
-        <Text style={styles.infoText}>
-          👥 128 seguidores
-        </Text>
-
-      </View>
+            </View>
+          ))}
+        </>
+      )}
 
     </ScrollView>
 
@@ -136,6 +150,12 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
 
+  message: {
+    color: "#777777",
+    textAlign: "center",
+    marginTop: 100,
+  },
+
   cover: {
     height: 210,
     borderRadius: 22,
@@ -143,23 +163,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 22,
-  },
-
-  artistImage: {
-  width: "100%",
-  height: "100%",
-  borderRadius: 22,
-},
-
-  avatar: {
-    width: 105,
-    height: 105,
-    borderRadius: 53,
-    backgroundColor: "#220B0F",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#FF2147",
   },
 
   name: {
@@ -230,18 +233,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     flex: 1,
     fontWeight: "600",
-  },
-
-  info: {
-    backgroundColor: "#121212",
-    borderRadius: 16,
-    padding: 17,
-    gap: 10,
-  },
-
-  infoText: {
-    color: "#999999",
-    fontSize: 13,
   },
 
 });
