@@ -13,9 +13,11 @@ type Usuario={
 type AuthContextType={
   usuario: Usuario | null;
   cargando: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  registro: (nombre: string, email: string, password: string, rol: string, datosArtista?: { nombreArtistico: string; descripcion: string; generoId: number }) => Promise<void>;
-  logout: () => Promise<void>;
+  login:(email: string, password: string)=>Promise<void>;
+  registro:(nombre: string, email: string, password: string, rol: string,
+            datosArtista?:{nombreArtistico: string; descripcion: string; generoId: number; linkMusica: string}
+  )=>Promise<void>;
+  logout:()=>Promise<void>;
 };
 
 const AuthContext=createContext<AuthContextType | null>(null);
@@ -62,8 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
     await guardarSesion(datos.usuario);
   }
 
-  async function registro(nombre: string, email: string, password: string, rol: string,datosArtista?:
-     { nombreArtistico: string; descripcion: string; generoId: number }){
+  async function registro(nombre: string, email: string, password: string, rol: string,
+                datosArtista?:{ nombreArtistico: string; descripcion: string; generoId: number, linkMusica: string }){
   const respuesta=await fetch(`${API_URL}/registro`,{
     method: "POST",
     headers:{ "Content-Type": "application/json" },
@@ -75,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
       nombreArtistico: datosArtista?.nombreArtistico,
       descripcion: datosArtista?.descripcion,
       generoId: datosArtista?.generoId,
+      linkMusica: datosArtista?.linkMusica,
     }),
   });
 

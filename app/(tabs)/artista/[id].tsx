@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { API_URL } from "../../../config";
 
 export default function Artista() {
@@ -88,7 +88,7 @@ export default function Artista() {
           styles.follow,
           seguido && styles.followed,
         ]}
-        onPress={() => setSeguido(!seguido)}
+        onPress={()=>setSeguido(!seguido)}
       >
 
         <Ionicons
@@ -103,13 +103,23 @@ export default function Artista() {
 
       </TouchableOpacity>
 
+      {artista.link_musica ? (
+      <TouchableOpacity
+      style={styles.escuchar}
+      onPress={()=>Linking.openURL(artista.link_musica)}
+      >
+    <Ionicons name="musical-note" size={18} color="#FFFFFF" />
+    <Text style={styles.escucharText}>Escuchar música</Text>
+  </TouchableOpacity>
+    ) : null}
+
       {canciones.length > 0 && (
         <>
           <Text style={styles.section}>
             Canciones
           </Text>
 
-          {canciones.map((cancion, index) => (
+          {canciones.map((cancion, index)=>(
             <View style={styles.song} key={cancion.id}>
 
               <Text style={styles.songNumber}>
@@ -137,26 +147,26 @@ export default function Artista() {
 }
 
 
-const styles = StyleSheet.create({
+const styles=StyleSheet.create({
 
-  container: {
+  container:{
     flex: 1,
     backgroundColor: "#050505",
   },
 
-  content: {
+  content:{
     padding: 22,
     paddingTop: 45,
     paddingBottom: 100,
   },
 
-  message: {
+  message:{
     color: "#777777",
     textAlign: "center",
     marginTop: 100,
   },
 
-  cover: {
+  cover:{
     height: 210,
     borderRadius: 22,
     backgroundColor: "#18070A",
@@ -165,13 +175,13 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
 
-  name: {
+  name:{
     color: "#FFFFFF",
     fontSize: 31,
     fontWeight: "900",
   },
 
-  genre: {
+  genre:{
     color: "#FF2147",
     fontSize: 11,
     fontWeight: "800",
@@ -179,14 +189,14 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  description: {
+  description:{
     color: "#888888",
     fontSize: 14,
     lineHeight: 21,
     marginTop: 17,
   },
 
-  follow: {
+  follow:{
     backgroundColor: "#FF2147",
     borderRadius: 13,
     paddingVertical: 13,
@@ -197,16 +207,34 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 
-  followed: {
+  followed:{
     backgroundColor: "#3A1118",
   },
 
-  followText: {
+  followText:{
     color: "#FFFFFF",
     fontWeight: "800",
   },
 
-  section: {
+  escuchar: {
+  backgroundColor: "#171717",
+  borderRadius: 13,
+  paddingVertical: 13,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  marginTop: 10,
+  borderWidth: 1,
+  borderColor: "#333333",
+},
+
+escucharText: {
+  color: "#FFFFFF",
+  fontWeight: "700",
+},
+
+  section:{
     color: "#FFFFFF",
     fontSize: 20,
     fontWeight: "800",
@@ -214,7 +242,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  song: {
+  song:{
     backgroundColor: "#121212",
     borderRadius: 14,
     padding: 13,
@@ -223,13 +251,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  songNumber: {
+  songNumber:{
     color: "#777777",
     width: 28,
     textAlign: "center",
   },
 
-  songName: {
+  songName:{
     color: "#FFFFFF",
     flex: 1,
     fontWeight: "600",

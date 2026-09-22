@@ -17,6 +17,7 @@ export default function Registro(){
   const[descripcion, setDescripcion]=useState("");
   const[generos, setGeneros]=useState<any[]>([]);
   const[generoId, setGeneroId]=useState<number | null>(null);
+  const [linkMusica, setLinkMusica] = useState("");
 
   useEffect(()=>{
     obtenerGeneros();
@@ -60,11 +61,12 @@ export default function Registro(){
     try{
       setCargando(true);
 
-      if(rol === "artista"){
-        await registro(nombre, email, password, rol, {
+      if(rol==="artista"){
+        await registro(nombre, email, password, rol,{
           nombreArtistico,
           descripcion,
           generoId: generoId!,
+          linkMusica,
         });
       }else{
         await registro(nombre, email, password, rol);
@@ -177,6 +179,15 @@ export default function Registro(){
                 </TouchableOpacity>
               ))}
             </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Link a Spotify, YouTube, etc. (opcional)"
+            placeholderTextColor="#666666"
+            value={linkMusica}
+            onChangeText={setLinkMusica}
+            autoCapitalize="none"
+            />
 
             {generos.length===0 &&(
               <Text style={styles.avisoGeneros}>
