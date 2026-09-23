@@ -84,14 +84,6 @@ export default function Inicio(){
           onPress={() => router.push(`/artista/${destacado.id}`)}
         >
 
-          <View style={styles.imagePlaceholder}>
-
-            <Ionicons
-              name="musical-notes"
-              size={45}
-              color="#FF2147"/>
-          </View>
-
           <View style={styles.cardText}>
 
             <Text style={styles.small}>
@@ -141,17 +133,7 @@ export default function Inicio(){
               <TouchableOpacity
                 key={artista.id}
                 style={styles.smallCard}
-                onPress={() => router.push(`/artista/${artista.id}`)}>
-
-                <View style={styles.smallImage}>
-
-                  <Ionicons
-                    name="person"
-                    size={30}
-                    color="#FF2147"
-                  />
-
-                </View>
+                onPress={()=>router.push(`/artista/${artista.id}`)}>
 
                 <Text style={styles.cardName}>
                   {artista.nombre_artistico}
@@ -227,20 +209,13 @@ const styles = StyleSheet.create({
   mainCard: {
     backgroundColor: "#151515",
     borderRadius: 20,
-    overflow: "hidden",
     borderWidth: 1,
     borderColor: "#242424",
   },
 
-  imagePlaceholder: {
-    height: 190,
-    backgroundColor: "#21070C",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
   cardText: {
     padding: 17,
+    paddingTop: 22,
   },
 
   small: {
@@ -300,20 +275,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
 
-  smallCard: {
-    flex: 1,
-    backgroundColor: "#121212",
-    borderRadius: 16,
-    padding: 10,
-  },
+  smallCard:{
+  flex: 1,
+  backgroundColor: "#121212",
+  borderRadius: 16,
+  padding: 14,
+},
 
-  smallImage: {
-    height: 115,
-    borderRadius: 12,
-    backgroundColor: "#211014",
-    alignItems: "center",
-    justifyContent: "center",
-  },
 
   cardName: {
     color: "#FFFFFF",

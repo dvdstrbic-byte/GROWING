@@ -107,10 +107,6 @@ export default function Artista(){
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
 
-      <View style={styles.cover}>
-        <Ionicons name="musical-notes" size={50} color="#FF2147" />
-      </View>
-
       <Text style={styles.name}>
         {artista.nombre_artistico}
       </Text>
@@ -125,22 +121,21 @@ export default function Artista(){
         </Text>
       ) : null}
 
+    {usuario?.rol==="oyente" &&(
       <TouchableOpacity
         style={[styles.follow, seguido && styles.followed,]}
         onPress={alternarSeguir}
       >
-
         <Ionicons
           name={seguido ? "checkmark" : "heart-outline"}
           size={18}
           color="#FFFFFF"
         />
-
         <Text style={styles.followText}>
           {seguido ? "Siguiendo" : "Seguir artista"}
         </Text>
-
       </TouchableOpacity>
+    )}
 
       {artista.link_musica ? (
       <TouchableOpacity

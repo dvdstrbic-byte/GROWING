@@ -19,7 +19,7 @@ type AuthContextType={
     email: string, 
     password: string, 
     rol: string,
-    datosArtista?:{nombreArtistico: string; descripcion: string; generoId: number; linkMusica: string; canciones: string[];      
+    datosArtista?:{nombreArtistico: string; descripcion: string; generoIds: number[]; linkMusica: string; canciones: string[];      
     })=>Promise<void>;
   logout:()=>Promise<void>;
 };
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
     email: string, 
     password: string, 
     rol: string,
-    datosArtista?:{nombreArtistico: string; descripcion: string; generoId: number, linkMusica: string; canciones: string[];}){
+    datosArtista?:{nombreArtistico: string; descripcion: string; generoIds: number[], linkMusica: string; canciones: string[];}){
   
   const respuesta=await fetch(`${API_URL}/registro`,{
     method: "POST",
@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
       rol,
       nombreArtistico: datosArtista?.nombreArtistico,
       descripcion: datosArtista?.descripcion,
-      generoId: datosArtista?.generoId,
+      generoIds: datosArtista?.generoIds,
       linkMusica: datosArtista?.linkMusica,
       canciones: datosArtista?.canciones,
     }),

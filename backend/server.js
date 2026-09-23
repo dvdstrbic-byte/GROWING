@@ -22,8 +22,17 @@ app.get("/usuarios", (req, res)=>{
 });
 
 app.get("/artistas", (req, res)=>{
-    const sql = `SELECT artistas.id, artistas.usuario_id, artistas.nombre_artistico, artistas.descripcion, generos.nombre AS genero FROM artistas
-        LEFT JOIN generos ON artistas.genero_id = generos.id`;
+    const sql = `
+    SELECT artistas.id, 
+    artistas.usuario_id, 
+    artistas.nombre_artistico, 
+    artistas.descripcion, 
+    GROUP_CONCAT(generos.nombre SEPARATOR ', ') AS genero
+    FROM artistas
+    LEFT JOIN artista_generos ON artista_generos.artista_id = artistas.id
+    LEFT JOIN generos ON generos.id = artista_generos.genero_id
+    GROUP BY artistas.id
+    `;
 
     conexion.query(sql, (error, resultados)=>{
         if(error){
@@ -34,15 +43,6 @@ app.get("/artistas", (req, res)=>{
     });
 });
 
-app.get("/generos", (req, res)=>{
-    conexion.query("SELECT id, nombre FROM generos", (error, resultados)=>{
-        if(error){
-            console.log(error);
-            return res.status(500).json({error: "Error al consultar generos"});
-        }
-        res.json(resultados);
-    });
-});
 
 app.get("/artistas/:id", (req, res)=>{
     const{id}=req.params;
@@ -54,11 +54,13 @@ app.get("/artistas/:id", (req, res)=>{
             artistas.nombre_artistico, 
             artistas.descripcion, 
             artistas.link_musica,
-            generos.nombre AS genero,
+            GROUP_CONCAT(generos.nombre SEPARATOR ', ') AS genero,
             (SELECT COUNT(*) FROM seguidores WHERE seguidores.artista_id = artistas.id) AS cantidad_seguidores
         FROM artistas
-        LEFT JOIN generos ON artistas.genero_id = generos.id
+        LEFT JOIN artista_generos ON artista_generos.artista_id = artistas.id
+        LEFT JOIN generos ON generos.id = artista_generos.genero_id
         WHERE artistas.id = ?
+        GROUP BY artistas.id
     `;
 
     conexion.query(sql, [id], (error, resultados)=>{
@@ -91,14 +93,25 @@ app.get("/artistas/:id/canciones",(req, res)=>{
     );
 });
 
+app.get("/generos", (req, res)=>{
+    conexion.query("SELECT id, nombre FROM generos", (error, resultados)=>{
+        if(error){
+            console.log(error);
+            return res.status(500).json({error: "Error al consultar generos"});
+        }
+        res.json(resultados);
+    });
+});
+
+
 app.post("/registro",(req, res)=>{
-    const{ nombre, email, password, rol, nombreArtistico, descripcion, generoId, linkMusica, canciones } = req.body;
+    const{ nombre, email, password, rol, nombreArtistico, descripcion, generoIds, linkMusica, canciones } = req.body;
 
 if(!nombre || !email || !password){
      return res.status(400).json({error: "Faltan datos obligatorios"});
   }
 
-if(rol==="artista" && (!nombreArtistico || !generoId)){
+if(rol==="artista" && (!nombreArtistico || !Array.isArray(generoIds) || generoIds.length===0)){
         return res.status(400).json({error: "Faltan datos del artista"});
   }
 
@@ -127,9 +140,9 @@ if(resultados.length>0){
 const nuevoUsuarioId=resultado.insertId;
 
  if(rol==="artista"){
-    conexion.query(
-     "INSERT INTO artistas (usuario_id, nombre_artistico, descripcion, genero_id, link_musica) VALUES (?, ?, ?, ?, ?)",
-    [nuevoUsuarioId, nombreArtistico, descripcion || "", generoId, linkMusica || null],
+   conexion.query(
+     "INSERT INTO artistas (usuario_id, nombre_artistico, descripcion, link_musica) VALUES (?, ?, ?, ?)",
+    [nuevoUsuarioId, nombreArtistico, descripcion || "", linkMusica || null],
         (error, resultadoArtista)=>{
     
     if(error){
@@ -138,6 +151,15 @@ const nuevoUsuarioId=resultado.insertId;
   }
 
 const nuevoArtistaId=resultadoArtista.insertId;
+
+  generoIds.forEach((generoId)=>{
+    conexion.query(
+        "INSERT INTO artista_generos (artista_id, genero_id) VALUES (?, ?)",
+    [nuevoArtistaId, generoId],
+    (error)=>{
+         if (error) console.log("Error al guardar género:", error);
+      });
+    });
     
     if(Array.isArray(canciones)){
         canciones
@@ -257,6 +279,66 @@ app.get("/seguidores/estado/:usuarioId/:artistaId",(req, res)=>{
             res.json({siguiendo: resultados.length>0});
         });
     });
+
+    app.get("/usuarios/:id/seguidos", (req, res)=>{
+    const {id}=req.params;
+
+    const sql=`
+        SELECT artistas.id, artistas.nombre_artistico
+        FROM seguidores
+        JOIN artistas ON seguidores.artista_id = artistas.id
+        WHERE seguidores.usuario_id = ?
+    `;
+
+    conexion.query(sql,[id],(error, resultados)=>{
+        if(error){
+            console.log(error);
+            return res.status(500).json({error: "Error al consultar seguidos"});
+        }
+        res.json(resultados);
+    });
+});
+
+app.get("/artistas/usuario/:usuarioId", (req, res)=>{
+    const {usuarioId}=req.params;
+
+    const sql= `
+        SELECT id, nombre_artistico,
+        (SELECT COUNT(*) FROM seguidores WHERE seguidores.artista_id = artistas.id) AS cantidad_seguidores
+        FROM artistas
+        WHERE usuario_id = ?
+    `;
+
+    conexion.query(sql, [usuarioId], (error, resultados)=>{
+        if(error){
+            console.log(error);
+            return res.status(500).json({error: "Error al consultar artista"});
+        }
+        if(resultados.length===0){
+            return res.status(404).json({error: "Artista no encontrado"});
+        }
+        res.json(resultados[0]);
+    });
+});
+
+app.get("/artistas/:id/seguidores-lista", (req, res)=>{
+    const {id}=req.params;
+
+    const sql= `
+        SELECT usuarios.id, usuarios.nombre
+        FROM seguidores
+        JOIN usuarios ON seguidores.usuario_id = usuarios.id
+        WHERE seguidores.artista_id = ?
+    `;
+
+    conexion.query(sql, [id], (error, resultados)=>{
+        if(error){
+            console.log(error);
+            return res.status(500).json({error: "Error al consultar seguidores"});
+        }
+        res.json(resultados);
+    });
+});
 
 app.listen(3000, "0.0.0.0",()=>{
     console.log("Servidor funcionando en el puerto 3000");

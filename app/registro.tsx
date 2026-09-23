@@ -16,7 +16,7 @@ export default function Registro(){
   const[nombreArtistico, setNombreArtistico]=useState("");
   const[descripcion, setDescripcion]=useState("");
   const[generos, setGeneros]=useState<any[]>([]);
-  const[generoId, setGeneroId]=useState<number | null>(null);
+  const [generoIds, setGeneroIds] = useState<number[]>([]);
   const[linkMusica, setLinkMusica]=useState("");
   const[temasSugeridos, setTemasSugeridos]=useState(["", "", ""]);
 
@@ -54,10 +54,10 @@ export default function Registro(){
       return;
     }
 
-    if(rol==="artista" && (!nombreArtistico || !generoId)){
-      Alert.alert("Faltan datos", "Completá tu nombre artístico y elegí un género.");
-      return;
-    }
+    if (rol === "artista" && (!nombreArtistico || generoIds.length === 0)) {
+  Alert.alert("Completá tu nombre artístico y elegí al menos un género.");
+  return;
+}
 
     try{
       setCargando(true);
@@ -66,7 +66,7 @@ export default function Registro(){
         await registro(nombre, email, password, rol,{
           nombreArtistico,
           descripcion,
-          generoId: generoId!,
+          generoIds,
           linkMusica,
           canciones: temasSugeridos,
         });
@@ -79,6 +79,14 @@ export default function Registro(){
       setCargando(false);
     }
   }
+
+  function alternarGenero(id: number) {
+  if (generoIds.includes(id)) {
+    setGeneroIds(generoIds.filter((g) => g !== id));
+  } else {
+    setGeneroIds([...generoIds, id]);
+  }
+}
 
   function actualizarTema(indice: number, texto: string) {
   const copia = [...temasSugeridos];
@@ -164,29 +172,29 @@ export default function Registro(){
               numberOfLines={3}
             />
 
-            <Text style={styles.label}>GÉNERO</Text>
+<Text style={styles.label}>GÉNEROS</Text>
 
-            <View style={styles.generoRow}>
-              {generos.map((g) => (
-                <TouchableOpacity
-                  key={g.id}
-                  style={[
-                    styles.generoChip,
-                    generoId===g.id && styles.generoChipActive,
-                  ]}
-                  onPress={()=>setGeneroId(g.id)}
-                >
-                  <Text
-                    style={[
-                      styles.generoChipText,
-                      generoId===g.id && styles.generoChipTextActive,
-                    ]}
-                  >
-                    {g.nombre}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+<View style={styles.generoRow}>
+  {generos.map((g)=>(
+    <TouchableOpacity
+      key={g.id}
+      style={[
+        styles.generoChip,
+        generoIds.includes(g.id) && styles.generoChipActive,
+      ]}
+      onPress={()=>alternarGenero(g.id)}
+    >
+      <Text
+        style={[
+          styles.generoChipText,
+          generoIds.includes(g.id) && styles.generoChipTextActive,
+        ]}
+      >
+        {g.nombre}
+      </Text>
+    </TouchableOpacity>
+  ))}
+</View>
 
           <TextInput
             style={styles.input}

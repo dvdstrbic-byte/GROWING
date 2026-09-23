@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { API_URL } from "../../config";
 
-const generos = ["Todos","Rock","Trap","Indie","Pop","Rap","Alternativo",];
+export default function Explorar(){
 
-export default function Explorar() {
+  const[generosDisponibles, setGenerosDisponibles]=useState<string[]>(["Todos"]);
   const[genero, setGenero]=useState("Todos");
   const[busqueda, setBusqueda]=useState("");
   const[artistas, setArtistas]=useState<any[]>([]);
@@ -14,10 +14,25 @@ export default function Explorar() {
 
   useEffect(()=>{
     obtenerArtistas();
+    obtenerGeneros();
   }, []);
 
-  const obtenerArtistas=async()=>{
-    
+
+  const obtenerGeneros=async()=>{
+  try{
+    const respuesta=await fetch(`${API_URL}/generos`);
+    const datos=await respuesta.json();
+
+    if(Array.isArray(datos)){
+      setGenerosDisponibles(["Todos", ...datos.map((g: any)=>g.nombre)]);
+    }
+  }catch(error){
+    console.log("Error al obtener generos:");
+    console.log(error);
+  }
+};
+
+  const obtenerArtistas=async()=>{    
     try{
       const respuesta=await fetch(`${API_URL}/artistas`);
       const datos=await respuesta.json();
@@ -75,7 +90,7 @@ export default function Explorar() {
         horizontal
         showsHorizontalScrollIndicator={false}>
 
-        {generos.map((item) => (
+        {generosDisponibles.map((item) => (
 
           <TouchableOpacity
             key={item}
