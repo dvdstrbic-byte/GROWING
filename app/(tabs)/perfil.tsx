@@ -1,12 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { API_URL } from "../../config";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Perfil(){
-  const {usuario, logout}=useAuth();
+  const {usuario, logout, eliminarCuenta } = useAuth();
   const [seguidos, setSeguidos]=useState<any[]>([]);
   const [misSeguidores, setMisSeguidores]=useState<any[]>([]);
   const [cantidadSeguidores, setCantidadSeguidores]=useState(0);
@@ -24,6 +24,28 @@ export default function Perfil(){
     obtenerMisSeguidores();
   }
 },[pathname, usuario]);
+
+
+function confirmarEliminarCuenta(){
+  Alert.alert(
+    "Eliminar cuenta",
+    "Esta acción no se puede deshacer. ¿Seguro que querés eliminar tu cuenta?",
+    [
+      {text: "Cancelar", style: "cancel"},
+      {
+        text: "Eliminar",
+        style: "destructive",
+        onPress: async()=>{
+          try{
+            await eliminarCuenta();
+          } catch (error: any) {
+            Alert.alert("Error", error.message);
+          }
+        },
+      },
+    ]
+  );
+}
 
   const obtenerSeguidos=async()=>{
     try{
@@ -64,8 +86,11 @@ export default function Perfil(){
     await logout();
   }
 
-  return (
-    <View style={styles.container}>
+  return(
+  <ScrollView
+    style={styles.container}
+    contentContainerStyle={styles.content}
+  >
       <Text style={styles.title}>Mi perfil</Text>
 
       <View style={styles.profile}>
@@ -130,12 +155,24 @@ export default function Perfil(){
         </>
       )}
 
+      <TouchableOpacity style={styles.option} onPress={() => router.push("/editar-perfil")}>
+      <Ionicons name="create-outline" size={22} color="#FF2147" />
+      <Text style={styles.optionText}>Editar perfil</Text>
+      <Ionicons name="chevron-forward" size={18} color="#777777" />
+      </TouchableOpacity>
+
+<TouchableOpacity style={styles.option} onPress={confirmarEliminarCuenta}>
+  <Ionicons name="trash-outline" size={22} color="#FF2147" />
+  <Text style={styles.optionText}>Eliminar cuenta</Text>
+  <Ionicons name="chevron-forward" size={18} color="#777777" />
+</TouchableOpacity>
+
       <TouchableOpacity style={styles.option} onPress={cerrarSesion}>
         <Ionicons name="log-out-outline" size={22} color="#FF2147" />
         <Text style={styles.optionText}>Cerrar sesión</Text>
         <Ionicons name="chevron-forward" size={18} color="#777777" />
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -228,7 +265,7 @@ const styles=StyleSheet.create({
     padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 35,
+    marginTop: 15,
   },
   optionText:{
     color: "#FFFFFF",
@@ -236,4 +273,8 @@ const styles=StyleSheet.create({
     marginLeft: 12,
     fontWeight: "600",
   },
+
+  content:{
+  paddingBottom: 50,
+},
 });

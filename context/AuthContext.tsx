@@ -10,18 +10,39 @@ type Usuario={
   rol: "oyente" | "artista";
 };
 
+type DatosArtista={
+  nombreArtistico: string;
+  descripcion: string;
+  generoIds: number[];
+  linkMusica: string;
+  canciones: string[];
+};
+
+type DatosEdicion={
+  nombre: string;
+  email: string;
+  password?: string;
+  nombreArtistico?: string;
+  descripcion?: string;
+  linkMusica?: string;
+  generoIds?: number[];
+  canciones?: string[];
+};
+
 type AuthContextType={
   usuario: Usuario | null;
   cargando: boolean;
-  login:(email: string, password: string)=>Promise<void>;
-  registro:(
-    nombre: string, 
-    email: string, 
-    password: string, 
+  login: (email: string, password: string)=>Promise<void>;
+  registro: (
+    nombre: string,
+    email: string,
+    password: string,
     rol: string,
-    datosArtista?:{nombreArtistico: string; descripcion: string; generoIds: number[]; linkMusica: string; canciones: string[];      
-    })=>Promise<void>;
-  logout:()=>Promise<void>;
+    datosArtista?: DatosArtista
+  )=>Promise<void>;
+  actualizarUsuario: (datos: DatosEdicion)=>Promise<void>;
+  eliminarCuenta:()=> Promise<void>;
+  logout: ()=>Promise<void>;
 };
 
 const AuthContext=createContext<AuthContextType | null>(null);
@@ -73,7 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
     email: string, 
     password: string, 
     rol: string,
-    datosArtista?:{nombreArtistico: string; descripcion: string; generoIds: number[], linkMusica: string; canciones: string[];}){
+    datosArtista?:{nombreArtistico: string; descripcion: string; generoIds: number[], linkMusica: string; canciones: string[];
+    }){
   
   const respuesta=await fetch(`${API_URL}/registro`,{
     method: "POST",
@@ -99,17 +121,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
   await guardarSesion(datos.usuario);
 }
 
+async function actualizarUsuario(datos: DatosEdicion) {
+    const respuesta = await fetch(`${API_URL}/usuarios/${usuario!.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos),
+    });
+
+    const resultado=await respuesta.json();
+
+    if(!respuesta.ok){
+      throw new Error(resultado.error || "Error al actualizar la cuenta");
+    }
+
+    await guardarSesion({ ...usuario!, nombre: datos.nombre, email: datos.email });
+  }
+
+  async function eliminarCuenta(){
+    const respuesta=await fetch(`${API_URL}/usuarios/${usuario!.id}`,{
+      method: "DELETE",
+    });
+
+    if(!respuesta.ok){
+      const resultado = await respuesta.json();
+      throw new Error(resultado.error || "Error al eliminar la cuenta");
+    }
+    await logout();
+  }
+
   async function logout(){
     await AsyncStorage.removeItem("usuario");
     setUsuario(null);
   }
 
-  return(
-    <AuthContext.Provider value={{ usuario, cargando, login, registro, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+ return (
+     <AuthContext.Provider
+       value={{ usuario, cargando, login, registro, actualizarUsuario, eliminarCuenta, logout }}
+     >
+       {children}
+     </AuthContext.Provider>
+   );
+ }
 
 export function useAuth(){
   const context=useContext(AuthContext);

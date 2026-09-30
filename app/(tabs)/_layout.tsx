@@ -64,10 +64,16 @@ export default function Layout() {
       <Tabs.Screen
         name="artista/[id]"
         options={{
-          href: null,
+        href: null,
         }}
       />
 
+      <Tabs.Screen
+        name="editar-perfil"
+        options={{
+        href: null,
+  }}
+/>
     </Tabs>
   );
 }

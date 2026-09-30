@@ -25,7 +25,7 @@ export default function Inicio(){
   };
 
   const destacado=artistas[0];
-  const nuevos=artistas.slice(1, 3);
+  const nuevos=artistas.slice(1, 5);
 
   return(
     <ScrollView
@@ -270,17 +270,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  row: {
-    flexDirection: "row",
-    gap: 12,
+  row:{
+  flexDirection: "row",
+  flexWrap: "wrap",
+  gap: 12,
   },
 
   smallCard:{
-  flex: 1,
+  width: "48%",
   backgroundColor: "#121212",
   borderRadius: 16,
   padding: 14,
-},
+  },
 
 
   cardName: {
