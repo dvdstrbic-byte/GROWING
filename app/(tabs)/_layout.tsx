@@ -48,6 +48,20 @@ export default function Layout() {
       />
 
       <Tabs.Screen
+  name="ranking"
+  options={{
+    title: "Ranking",
+    tabBarIcon: ({ color, size }) => (
+      <Ionicons
+        name="trophy-outline"
+        size={size}
+        color={color}
+      />
+    ),
+  }}
+/>
+
+      <Tabs.Screen
         name="perfil"
         options={{
           title: "Perfil",

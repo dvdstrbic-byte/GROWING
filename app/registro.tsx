@@ -18,7 +18,11 @@ export default function Registro(){
   const[generos, setGeneros]=useState<any[]>([]);
   const [generoIds, setGeneroIds] = useState<number[]>([]);
   const[linkMusica, setLinkMusica]=useState("");
-  const[temasSugeridos, setTemasSugeridos]=useState(["", "", ""]);
+  const[temasSugeridos, setTemasSugeridos]=useState([
+    { titulo: "", url: "" },
+    { titulo: "", url: "" },
+    { titulo: "", url: "" },
+  ]);
 
   useEffect(()=>{
     obtenerGeneros();
@@ -59,6 +63,11 @@ export default function Registro(){
   return;
 }
 
+    if (rol === "artista" && temasSugeridos.some((t) => t.url.trim() !== "" && t.titulo.trim() === "")) {
+  Alert.alert("Falta un título", "Si agregás un link a un tema, ponele también el título.");
+  return;
+}
+
     try{
       setCargando(true);
 
@@ -88,9 +97,9 @@ export default function Registro(){
   }
 }
 
-  function actualizarTema(indice: number, texto: string) {
+  function actualizarTema(indice: number, campo: "titulo" | "url", texto: string) {
   const copia = [...temasSugeridos];
-  copia[indice] = texto;
+  copia[indice] = { ...copia[indice], [campo]: texto };
   setTemasSugeridos(copia);
 }
 
@@ -208,14 +217,25 @@ export default function Registro(){
             <Text style={styles.label}>TEMAS SUGERIDOS (OPCIONAL)</Text>
 
             {[0, 1, 2].map((i)=>(
-            <TextInput
-            key={i}
-            style={styles.input}
-            placeholder={`Tema ${i + 1}`}
-            placeholderTextColor="#666666"
-            value={temasSugeridos[i]}
-            onChangeText={(texto)=>actualizarTema(i, texto)}
-            />
+            <View key={i} style={styles.temaGrupo}>
+              <TextInput
+                style={[styles.input, styles.inputTema]}
+                placeholder={`Tema ${i + 1} - título`}
+                placeholderTextColor="#666666"
+                value={temasSugeridos[i].titulo}
+                onChangeText={(texto)=>actualizarTema(i, "titulo", texto)}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder={`Tema ${i + 1} - link (opcional)`}
+                placeholderTextColor="#666666"
+                value={temasSugeridos[i].url}
+                onChangeText={(texto)=>actualizarTema(i, "url", texto)}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+            </View>
           ))}
 
             {generos.length===0 &&(
@@ -272,6 +292,12 @@ const styles=StyleSheet.create({
   inputMultiline:{
     height: 80,
     textAlignVertical: "top",
+  },
+  temaGrupo:{
+    marginBottom: 10,
+  },
+  inputTema:{
+    marginBottom: 6,
   },
   label:{
     color: "#777777",

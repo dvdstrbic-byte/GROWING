@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useState } from "react";
+import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { API_URL } from "../../../config";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -14,11 +14,13 @@ export default function Artista(){
   const [canciones, setCanciones]=useState<any[]>([]);
   const [cargando, setCargando]=useState(true);
 
-  useEffect(()=>{
+  useFocusEffect(
+  useCallback(()=>{
     obtenerArtista();
     obtenerCanciones();
     obtenerEstadoSeguimiento();
-  }, [id]);
+  }, [id, usuario])
+);
 
   const obtenerArtista=async()=>{
     try{
@@ -47,6 +49,20 @@ export default function Artista(){
       console.log("Error al obtener canciones:");
       console.log(error);
     }
+  };
+
+  const abrirLink=(url: string)=>{
+    const link=url.startsWith("http") ? url : `https://${url}`;
+
+    Linking.openURL(link).catch(()=>{
+      Alert.alert("No se pudo abrir el link", "Revisá que el link de la canción sea válido.");
+    });
+  };
+
+    const escucharCancion=(cancion: any)=>{
+    fetch(`${API_URL}/canciones/${cancion.id}/escucha`,{method: "POST"})
+      .catch((error)=>console.log("Error al registrar escucha:", error));
+    abrirLink(cancion.url);
   };
 
   const obtenerEstadoSeguimiento=async()=>{
@@ -140,43 +156,47 @@ export default function Artista(){
       {artista.link_musica ? (
       <TouchableOpacity
       style={styles.escuchar}
-      onPress={()=>Linking.openURL(artista.link_musica)}
+      onPress={()=>abrirLink(artista.link_musica)}
       >
     <Ionicons name="musical-note" size={18} color="#FFFFFF" />
     <Text style={styles.escucharText}>Escuchar música</Text>
   </TouchableOpacity>
     ) : null}
 
-      {canciones.length > 0 && (
+          {canciones.length > 0 && (
         <>
           <Text style={styles.section}>
             Canciones
           </Text>
 
-          {canciones.map((cancion, index)=>(
-            <View style={styles.song} key={cancion.id}>
+  {canciones.map((cancion, index)=>(
+    <TouchableOpacity
+    style={styles.song}
+    key={cancion.id}
+    disabled={!cancion.url}
+    onPress={()=>escucharCancion(cancion)}
+  >
+    <Text style={styles.songNumber}>
+      {index + 1}
+    </Text>
 
-              <Text style={styles.songNumber}>
-                {index + 1}
-              </Text>
+    <Text style={styles.songName}>
+      {cancion.titulo}
+    </Text>
 
-              <Text style={styles.songName}>
-                {cancion.titulo}
-              </Text>
-
-              <Ionicons
-                name="play-circle-outline"
-                size={27}
-                color="#FF2147"
-              />
-
-            </View>
-          ))}
+    {cancion.url ? (
+      <Ionicons
+        name="play-circle-outline"
+        size={27}
+        color="#FF2147"
+      />
+    ) : null}
+  </TouchableOpacity>
+))}
         </>
       )}
 
     </ScrollView>
-
   );
 }
 

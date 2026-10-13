@@ -14,7 +14,7 @@ export default function EditarPerfil(){
   const [linkMusica, setLinkMusica] = useState("");
   const [generos, setGeneros] = useState<any[]>([]);
   const [generosSeleccionados, setGenerosSeleccionados] = useState<number[]>([]);
-  const [canciones, setCanciones] = useState<string[]>([]);
+  const [canciones, setCanciones] = useState<{id?: number; titulo: string; url: string}[]>([]);
   const [cargando, setCargando] = useState(false);
   const [cargandoDatos, setCargandoDatos] = useState(usuario?.rol === "artista");
 
@@ -66,10 +66,14 @@ export default function EditarPerfil(){
       const datosCanciones=await respuestaCanciones.json();
 
       if(respuestaCanciones.ok){
-        setCanciones(
-          datosCanciones.map((cancion: any)=>cancion.titulo)
-        );
-      }
+      setCanciones(
+  datosCanciones.map((cancion: any)=>({
+    id: cancion.id,
+    titulo: cancion.titulo || "",
+    url: cancion.url || "",
+  }))
+);
+}
 
     }catch (error){
       console.log("Error al obtener datos del artista:");
@@ -92,26 +96,20 @@ export default function EditarPerfil(){
     }
   }
 
-  function cambiarCancion(texto: string, indice: number) {
-    const nuevasCanciones = [...canciones];
-    nuevasCanciones[indice] = texto;
-    setCanciones(nuevasCanciones);
-  }
+  function cambiarCancion(indice: number, campo: "titulo" | "url", texto: string){
+  const nuevas = [...canciones];
+  nuevas[indice] = { ...nuevas[indice], [campo]: texto };
+  setCanciones(nuevas);
+}
 
-  function agregarCancion(){
-    setCanciones([
-      ...canciones,
-      ""
-    ]);
-  }
+function agregarCancion(){
+  setCanciones([...canciones, { titulo: "", url: "" }]);
+}
 
-  function eliminarCancion(indice: number){
-    const nuevasCanciones = canciones.filter(
-      (_, index)=>index !== indice
-    );
-
-    setCanciones(nuevasCanciones);
-  }
+function eliminarCancion(indice: number){
+  setCanciones(canciones.filter((_, index)=>index !== indice));
+}
+  
 
   async function guardarCambios(){
     if(!nombre || !email){
@@ -146,6 +144,11 @@ export default function EditarPerfil(){
       return;
     }
 
+    if(usuario?.rol === "artista" && canciones.some((c)=>c.url.trim() !== "" && c.titulo.trim() === "")){
+  Alert.alert("Falta un título", "Si agregás un link a un tema, ponele también el título.");
+  return;
+  }
+
     try{
       setCargando(true);
 
@@ -160,7 +163,7 @@ export default function EditarPerfil(){
           linkMusica,
           generoIds: generosSeleccionados,
           canciones: canciones.filter(
-            (cancion) => cancion.trim() !== ""
+            (c) => c.titulo.trim() !== ""
           ),
         }),
       });
@@ -290,31 +293,32 @@ export default function EditarPerfil(){
             </Text>
 
             {canciones.map((cancion, indice) => (
-              <View
-                key={indice}
-                style={styles.cancionContainer}
-              >
+  <View key={indice} style={styles.cancionGrupo}>
+    <View style={styles.cancionContainer}>
+      <TextInput
+        style={styles.cancionInput}
+        placeholder={`Canción ${indice + 1} - título`}
+        placeholderTextColor="#666666"
+        value={cancion.titulo}
+        onChangeText={(texto)=>cambiarCancion(indice, "titulo", texto)}
+      />
+      <TouchableOpacity onPress={()=>eliminarCancion(indice)}>
+        <Text style={styles.eliminarCancion}>X</Text>
+      </TouchableOpacity>
+    </View>
 
-                <TextInput
-                  style={styles.cancionInput}
-                  placeholder={`Canción ${indice + 1}`}
-                  placeholderTextColor="#666666"
-                  value={cancion}
-                  onChangeText={(texto) =>
-                    cambiarCancion(texto, indice)
-                  }
-                />
-
-                <TouchableOpacity
-                  onPress={() => eliminarCancion(indice)}
-                >
-                  <Text style={styles.eliminarCancion}>
-                    X
-                  </Text>
-                </TouchableOpacity>
-
-              </View>
-            ))}
+    <TextInput
+      style={styles.cancionUrlInput}
+      placeholder={`Canción ${indice + 1} - link (opcional)`}
+      placeholderTextColor="#666666"
+      value={cancion.url}
+      onChangeText={(texto)=>cambiarCancion(indice, "url", texto)}
+      autoCapitalize="none"
+      autoCorrect={false}
+      keyboardType="url"
+    />
+  </View>
+))}
 
             <TouchableOpacity
               style={styles.agregarButton}
@@ -424,11 +428,15 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
 
-  cancionContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10
-  },
+  cancionGrupo: {
+  marginBottom: 14
+},
+
+cancionContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 6
+},
 
   cancionInput: {
     flex: 1,
@@ -437,6 +445,13 @@ const styles = StyleSheet.create({
     padding: 15,
     color: "#FFFFFF"
   },
+
+  cancionUrlInput: {
+  backgroundColor: "#151515",
+  borderRadius: 14,
+  padding: 15,
+  color: "#FFFFFF"
+},
 
   eliminarCancion: {
     color: "#FF2147",

@@ -7,6 +7,16 @@ const app=express();
 app.use(cors());
 app.use(express.json());
 
+function normalizarCancion(c){
+    if(typeof c==="string"){
+        return {titulo: c.trim(), url: null};
+    }
+    return {
+        titulo: ((c && c.titulo) || "").trim(),
+        url: ((c && c.url) || "").trim() || null
+    };
+}
+
 app.get("/", (req, res)=>{
     res.send("Servidor de GROWING funcionando");
 });
@@ -163,11 +173,12 @@ const nuevoArtistaId=resultadoArtista.insertId;
     
     if(Array.isArray(canciones)){
         canciones
-          .filter((titulo)=>titulo && titulo.trim() !== "")
-          .forEach((titulo)=>{
+          .map(normalizarCancion)
+          .filter((c)=>c.titulo !== "")
+          .forEach((c)=>{
         conexion.query(
-            "INSERT INTO canciones (artista_id, titulo) VALUES (?, ?)",
-        [nuevoArtistaId, titulo],
+            "INSERT INTO canciones (artista_id, titulo, url) VALUES (?, ?, ?)",
+        [nuevoArtistaId, c.titulo, c.url],
         (error)=>{
          if (error) console.log("Error al guardar tema sugerido:", error);
         });
@@ -372,113 +383,108 @@ app.get("/artistas/:id/generos", (req, res)=>{
 
 app.put("/usuarios/:id", (req, res)=>{
     const {id}=req.params;
-    const {nombre, email, password, nombreArtistico, descripcion, linkMusica, generoIds, canciones}=req.body;
+    const {nombre, nombreArtistico, descripcion, linkMusica, generoIds, canciones}=req.body;
 
-    if(!nombre || !email){
-        return res.status(400).json({error: "Faltan datos obligatorios"});
+    if(!nombre){
+        return res.status(400).json({error: "Falta el nombre"});
     }
 
     conexion.query(
-        "SELECT id FROM usuarios WHERE email = ? AND id != ?",
-        [email, id],
-        (error, resultados)=>{
-            if(error){
-                console.log(error);
-                return res.status(500).json({error: "Error del servidor" });
-            }
-            if(resultados.length>0){
-                return res.status(409).json({error: "Ese email ya está en uso"});
-            }
-
-            const sql = password
-                ? "UPDATE usuarios SET nombre = ?, email = ?, contraseña = ? WHERE id = ?"
-                : "UPDATE usuarios SET nombre = ?, email = ? WHERE id = ?";
-            const valores = password ? [nombre, email, password, id] : [nombre, email, id];
-
-            conexion.query(sql, valores, (error)=>{
-                if(error){
-                    console.log(error);
-                    return res.status(500).json({ error: "Error al actualizar usuario" });
-                }
-
-                if(nombreArtistico !== undefined){
-
-    conexion.query(
-        "UPDATE artistas SET nombre_artistico = ?, descripcion = ?, link_musica = ? WHERE usuario_id = ?",
-        [nombreArtistico, descripcion || "", linkMusica || null, id],
+        "UPDATE usuarios SET nombre = ? WHERE id = ?",
+        [nombre, id],
         (error)=>{
             if(error){
                 console.log(error);
-                return res.status(500).json({
-                    error: "Error al actualizar perfil de artista"
-                });
+                return res.status(500).json({error: "Error al actualizar usuario"});
+            }
+
+            if(nombreArtistico===undefined){
+                return res.json({mensaje: "Cuenta actualizada"});
             }
 
             conexion.query(
                 "SELECT id FROM artistas WHERE usuario_id = ?",
                 [id],
                 (error, resultadosArtista)=>{
-                    if(error){
+                    if(error || resultadosArtista.length===0){
                         console.log(error);
-                        return res.status(500).json({
-                            error: "Error al buscar artista"
-                        });
+                        return res.status(500).json({error: "Error al buscar artista"});
                     }
 
-                    const artistaId = resultadosArtista[0].id;
+                    const artistaId=resultadosArtista[0].id;
 
                     conexion.query(
-                        "DELETE FROM artista_generos WHERE artista_id = ?",
-                        [artistaId],
+                        "UPDATE artistas SET nombre_artistico = ?, descripcion = ?, link_musica = ? WHERE id = ?",
+                        [nombreArtistico, descripcion || "", linkMusica || null, artistaId],
                         (error)=>{
                             if(error){
                                 console.log(error);
-                                return res.status(500).json({
-                                    error: "Error al actualizar géneros"
-                                });
-                            }
-
-                            if(Array.isArray(generoIds)){
-                                generoIds.forEach((generoId)=>{
-                                    conexion.query(
-                                        "INSERT INTO artista_generos (artista_id, genero_id) VALUES (?, ?)",
-                                        [artistaId, generoId]
-                                    );
-                                });
+                                return res.status(500).json({error: "Error al actualizar perfil de artista"});
                             }
 
                             conexion.query(
-                                "DELETE FROM canciones WHERE artista_id = ?",
+                                "DELETE FROM artista_generos WHERE artista_id = ?",
                                 [artistaId],
                                 (error)=>{
                                     if(error){
                                         console.log(error);
-                                        return res.status(500).json({
-                                            error: "Error al actualizar canciones"
+                                        return res.status(500).json({error: "Error al actualizar géneros"});
+                                    }
+
+                                    if(Array.isArray(generoIds)){
+                                        generoIds.forEach((generoId)=>{
+                                            conexion.query(
+                                                "INSERT INTO artista_generos (artista_id, genero_id) VALUES (?, ?)",
+                                                [artistaId, generoId]
+                                            );
                                         });
                                     }
 
-                                    if(Array.isArray(canciones)){
-                                        canciones
-                                            .filter((titulo)=>titulo && titulo.trim() !== "")
-                                            .forEach((titulo)=>{
+                                    const cancionesEnviadas=Array.isArray(canciones)
+                                        ? canciones.filter((tema)=>tema && tema.titulo && tema.titulo.trim() !== "")
+                                        : [];
+
+                                    const idsConservados=cancionesEnviadas
+                                        .filter((tema)=>tema.id)
+                                        .map((tema)=>tema.id);
+
+                                    const sqlBorrar=idsConservados.length>0
+                                        ? "DELETE FROM canciones WHERE artista_id = ? AND id NOT IN (?)"
+                                        : "DELETE FROM canciones WHERE artista_id = ?";
+                                    const valoresBorrar=idsConservados.length>0
+                                        ? [artistaId, idsConservados]
+                                        : [artistaId];
+
+                                    conexion.query(sqlBorrar, valoresBorrar, (error)=>{
+                                        if(error){
+                                            console.log(error);
+                                            return res.status(500).json({error: "Error al actualizar canciones"});
+                                        }
+
+                                        cancionesEnviadas.forEach((tema)=>{
+                                            if(tema.id){
                                                 conexion.query(
-                                                    "INSERT INTO canciones (artista_id, titulo) VALUES (?, ?)",
-                                                    [artistaId, titulo]
+                                                    "UPDATE canciones SET titulo = ?, url = ? WHERE id = ? AND artista_id = ?",
+                                                    [tema.titulo, tema.url || null, tema.id, artistaId]
                                                 );
-                                            });
-                                    }
-                                    res.json({mensaje: "Cuenta actualizada"});
-                                    
-                            });
-                     });
-                 });
-            });
-}else{
-    res.json({mensaje: "Cuenta actualizada"});
-}
-    });
-});
+                                            }else{
+                                                conexion.query(
+                                                    "INSERT INTO canciones (artista_id, titulo, url) VALUES (?, ?, ?)",
+                                                    [artistaId, tema.titulo, tema.url || null]
+                                                );
+                                            }
+                                        });
+
+                                        res.json({mensaje: "Cuenta actualizada"});
+                                    });
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
+    );
 });
 
 app.delete("/usuarios/:id", (req, res)=>{
@@ -525,6 +531,47 @@ app.delete("/usuarios/:id", (req, res)=>{
     }else{
       borrarUsuario();
     }});
+});
+
+app.post("/canciones/:id/escucha", (req, res)=>{
+    const {id}=req.params;
+
+    conexion.query(
+        "UPDATE canciones SET reproducciones = reproducciones + 1 WHERE id = ?",
+        [id],
+        (error)=>{
+            if(error){
+                console.log(error);
+                return res.status(500).json({error: "Error al registrar la escucha"});
+            }
+            res.json({mensaje: "Escucha registrada"});
+        }
+    );
+});
+
+app.get("/ranking", (req, res)=>{
+    const sql=`
+        SELECT
+            canciones.id,
+            canciones.titulo,
+            canciones.url,
+            canciones.reproducciones,
+            artistas.id AS artista_id,
+            artistas.nombre_artistico
+        FROM canciones
+        JOIN artistas ON canciones.artista_id = artistas.id
+        WHERE canciones.url IS NOT NULL AND canciones.url != ''
+        ORDER BY canciones.reproducciones DESC, canciones.titulo ASC
+        LIMIT 10
+    `;
+
+    conexion.query(sql, (error, resultados)=>{
+        if(error){
+            console.log(error);
+            return res.status(500).json({error: "Error al consultar el ranking"});
+        }
+        res.json(resultados);
+    });
 });
 
 app.listen(3000, "0.0.0.0",()=>{

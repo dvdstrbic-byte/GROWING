@@ -10,12 +10,17 @@ type Usuario={
   rol: "oyente" | "artista";
 };
 
+export type Cancion={
+  titulo: string;
+  url?: string;
+};
+
 type DatosArtista={
   nombreArtistico: string;
   descripcion: string;
   generoIds: number[];
   linkMusica: string;
-  canciones: string[];
+  canciones: Cancion[];
 };
 
 type DatosEdicion={
@@ -26,7 +31,7 @@ type DatosEdicion={
   descripcion?: string;
   linkMusica?: string;
   generoIds?: number[];
-  canciones?: string[];
+  canciones?: (string | Cancion)[];
 };
 
 type AuthContextType={
@@ -94,8 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
     email: string, 
     password: string, 
     rol: string,
-    datosArtista?:{nombreArtistico: string; descripcion: string; generoIds: number[], linkMusica: string; canciones: string[];
-    }){
+    datosArtista?: DatosArtista){
   
   const respuesta=await fetch(`${API_URL}/registro`,{
     method: "POST",
