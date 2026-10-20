@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { File } from "expo-file-system";
+import { fetch as fetchExpo } from "expo/fetch";
 import { createContext, useContext, useEffect, useState } from "react";
 import { API_URL } from "../config";
 
@@ -7,6 +9,7 @@ type Usuario={
   id: number;
   nombre: string;
   email: string;
+  foto?: string | null;
   rol: "oyente" | "artista";
 };
 
@@ -43,8 +46,10 @@ type AuthContextType={
     email: string,
     password: string,
     rol: string,
-    datosArtista?: DatosArtista
+    datosArtista?: DatosArtista,
+    fotoUri?: string | null
   )=>Promise<void>;
+  cambiarFoto: (uri: string)=>Promise<void>;
   actualizarUsuario: (datos: DatosEdicion)=>Promise<void>;
   eliminarCuenta:()=> Promise<void>;
   logout: ()=>Promise<void>;
@@ -93,13 +98,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
 
     await guardarSesion(datos.usuario);
   }
-
-  async function registro(
-    nombre: string, 
-    email: string, 
-    password: string, 
+  
+   async function registro(
+    nombre: string,
+    email: string,
+    password: string,
     rol: string,
-    datosArtista?: DatosArtista){
+    datosArtista?: DatosArtista,
+    fotoUri?: string | null
+  ){
   
   const respuesta=await fetch(`${API_URL}/registro`,{
     method: "POST",
@@ -122,8 +129,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }){
   if(!respuesta.ok){
     throw new Error(datos.error || "Error al registrarse");
   }
-  await guardarSesion(datos.usuario);
+  let usuarioNuevo: Usuario=datos.usuario;
+
+if(fotoUri){
+  try{
+    const ruta=await subirFoto(usuarioNuevo.id, fotoUri);
+    usuarioNuevo={...usuarioNuevo, foto: ruta};
+  }catch(error){
+    console.log("Error al subir la foto:", error);
+  }
 }
+
+await guardarSesion(usuarioNuevo);
+}
+
+    async function subirFoto(usuarioId: number, uri: string){
+    const formulario=new FormData();
+    formulario.append("foto", new File(uri));
+
+    const respuesta=await fetchExpo(`${API_URL}/usuarios/${usuarioId}/foto`,{
+      method: "POST",
+      body: formulario,
+    });
+
+    const datos=await respuesta.json();
+
+    if(!respuesta.ok){
+      throw new Error(datos.error || "Error al subir la foto");
+    }
+
+    return datos.foto as string;
+  }
+
+  async function cambiarFoto(uri: string){
+    const ruta=await subirFoto(usuario!.id, uri);
+    await guardarSesion({...usuario!, foto: ruta});
+  }
 
 async function actualizarUsuario(datos: DatosEdicion) {
     const respuesta = await fetch(`${API_URL}/usuarios/${usuario!.id}`, {
@@ -160,7 +201,7 @@ async function actualizarUsuario(datos: DatosEdicion) {
 
  return (
      <AuthContext.Provider
-       value={{ usuario, cargando, login, registro, actualizarUsuario, eliminarCuenta, logout }}
+       value={{ usuario, cargando, login, registro, cambiarFoto, actualizarUsuario, eliminarCuenta, logout }}
      >
        {children}
      </AuthContext.Provider>

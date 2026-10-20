@@ -1,11 +1,35 @@
 const express=require("express");
 const cors=require("cors");
 const conexion=require("./db");
+const multer=require("multer");
+const path=require("path");
+const fs=require("fs");
 
 const app=express();
 
 app.use(cors());
 app.use(express.json());
+
+
+if(!fs.existsSync(path.join(__dirname, "uploads"))){
+    fs.mkdirSync(path.join(__dirname, "uploads"));
+}
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+const subida=multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb)=>cb(null, path.join(__dirname, "uploads")),
+        filename: (req, file, cb)=>{
+            const extension=path.extname(file.originalname) || ".jpg";
+            cb(null, `usuario-${req.params.id}-${Date.now()}${extension}`);
+        },
+    }),
+    limits: {fileSize: 5 * 1024 * 1024},
+    fileFilter: (req, file, cb)=>{
+        cb(null, file.mimetype.startsWith("image/"));
+    },
+});
 
 function normalizarCancion(c){
     if(typeof c==="string"){
@@ -37,11 +61,13 @@ app.get("/artistas", (req, res)=>{
     artistas.usuario_id, 
     artistas.nombre_artistico, 
     artistas.descripcion, 
+    usuarios.foto,
     GROUP_CONCAT(generos.nombre SEPARATOR ', ') AS genero
     FROM artistas
+    JOIN usuarios ON usuarios.id = artistas.usuario_id
     LEFT JOIN artista_generos ON artista_generos.artista_id = artistas.id
     LEFT JOIN generos ON generos.id = artista_generos.genero_id
-    GROUP BY artistas.id
+    GROUP BY artistas.id, usuarios.foto
     `;
 
     conexion.query(sql, (error, resultados)=>{
@@ -64,13 +90,15 @@ app.get("/artistas/:id", (req, res)=>{
             artistas.nombre_artistico, 
             artistas.descripcion, 
             artistas.link_musica,
+            usuarios.foto,
             GROUP_CONCAT(generos.nombre SEPARATOR ', ') AS genero,
             (SELECT COUNT(*) FROM seguidores WHERE seguidores.artista_id = artistas.id) AS cantidad_seguidores
         FROM artistas
+        JOIN usuarios ON usuarios.id = artistas.usuario_id
         LEFT JOIN artista_generos ON artista_generos.artista_id = artistas.id
         LEFT JOIN generos ON generos.id = artista_generos.genero_id
         WHERE artistas.id = ?
-        GROUP BY artistas.id
+        GROUP BY artistas.id, usuarios.foto
     `;
 
     conexion.query(sql, [id], (error, resultados)=>{
@@ -227,7 +255,8 @@ if(resultados.length===0){
             id: usuario.id,
             nombre: usuario.nombre,
             email: usuario.email,
-            rol: usuario.tipo_usuario
+            rol: usuario.tipo_usuario,
+            foto: usuario.foto
                 }
             });
         });
@@ -572,6 +601,48 @@ app.get("/ranking", (req, res)=>{
         }
         res.json(resultados);
     });
+});
+
+app.post("/usuarios/:id/foto", subida.single("foto"), (req, res)=>{
+    const {id}=req.params;
+
+    if(!req.file){
+        return res.status(400).json({error: "No se recibió ninguna imagen"});
+    }
+
+    const rutaNueva=`/uploads/${req.file.filename}`;
+
+    conexion.query("SELECT foto FROM usuarios WHERE id = ?", [id], (error, resultados)=>{
+        if(error){
+            console.log(error);
+            return res.status(500).json({error: "Error del servidor"});
+        }
+
+        if(resultados.length===0){
+            fs.unlink(req.file.path, ()=>{});
+            return res.status(404).json({error: "Usuario no encontrado"});
+        }
+
+        const fotoVieja=resultados[0].foto;
+
+        conexion.query("UPDATE usuarios SET foto = ? WHERE id = ?", [rutaNueva, id], (error)=>{
+            if(error){
+                console.log(error);
+                return res.status(500).json({error: "Error al guardar la foto"});
+            }
+
+            if(fotoVieja){
+                fs.unlink(path.join(__dirname, fotoVieja), ()=>{});
+            }
+
+            res.json({foto: rutaNueva});
+        });
+    });
+});
+
+app.use((error, req, res, next)=>{
+    console.log(error);
+    res.status(500).json({error: "Error al subir la imagen"});
 });
 
 app.listen(3000, "0.0.0.0",()=>{

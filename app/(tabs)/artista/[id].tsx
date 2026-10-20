@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 import { API_URL } from "../../../config";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -122,6 +122,10 @@ export default function Artista(){
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+
+      {artista.foto ? (
+  <Image source={{uri: `${API_URL}${artista.foto}`}} style={styles.portada} />
+) : null}
 
       <Text style={styles.name}>
         {artista.nombre_artistico}
@@ -319,5 +323,12 @@ escucharText: {
   color: "#777777",
   fontSize: 13,
   marginTop: 6,
+},
+
+portada:{
+  width: "100%",
+  height: 210,
+  borderRadius: 22,
+  marginBottom: 22,
 },
 });

@@ -1,6 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { API_URL } from "../config";
 import { useAuth } from "../context/AuthContext";
 
@@ -11,7 +13,9 @@ export default function Registro(){
   const[email, setEmail]=useState("");
   const[password, setPassword]=useState("");
   const[rol, setRol]=useState<"oyente" | "artista">("oyente");
+  const[foto, setFoto]=useState<string | null>(null);
   const[cargando, setCargando]=useState(false);
+  
 
   const[nombreArtistico, setNombreArtistico]=useState("");
   const[descripcion, setDescripcion]=useState("");
@@ -78,9 +82,9 @@ export default function Registro(){
           generoIds,
           linkMusica,
           canciones: temasSugeridos,
-        });
+        },foto);
       }else{
-        await registro(nombre, email, password, rol);
+        await registro(nombre, email, password, rol, undefined, foto);
       }
     }catch(error: any){
       Alert.alert("Error", error.message);
@@ -94,6 +98,19 @@ export default function Registro(){
     setGeneroIds(generoIds.filter((g) => g !== id));
   } else {
     setGeneroIds([...generoIds, id]);
+  }
+}
+
+async function elegirFoto(){
+  const resultado=await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ["images"],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+  });
+
+  if(!resultado.canceled){
+    setFoto(resultado.assets[0].uri);
   }
 }
 
@@ -160,6 +177,17 @@ export default function Registro(){
             </Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity style={styles.fotoBoton} onPress={elegirFoto}>
+  {foto ? (
+    <Image source={{uri: foto}} style={styles.fotoImagen} />
+  ) : (
+    <Ionicons name="camera-outline" size={32} color="#FF2147" />
+  )}
+</TouchableOpacity>
+<Text style={styles.fotoTexto}>
+  {foto ? "Cambiar foto" : "Agregar foto (opcional)"}
+</Text>
 
         {rol==="artista" &&(
           <>
@@ -369,4 +397,27 @@ const styles=StyleSheet.create({
     textAlign: "center",
     marginTop: 18,
   },
+  fotoBoton:{
+  width: 110,
+  height: 110,
+  borderRadius: 55,
+  backgroundColor: "#151515",
+  borderWidth: 1,
+  borderColor: "#333333",
+  alignSelf: "center",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+},
+fotoImagen:{
+  width: "100%",
+  height: "100%",
+},
+fotoTexto:{
+  color: "#888888",
+  fontSize: 12,
+  textAlign: "center",
+  marginTop: 8,
+  marginBottom: 22,
+},
 });

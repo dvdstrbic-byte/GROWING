@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { API_URL } from "../../config";
 
 export default function Explorar(){
@@ -48,9 +48,9 @@ export default function Explorar(){
 
   const resultados=artistas.filter((artista)=>{
 
-    const porGenero=genero==="Todos" || artista.genero.toLowerCase().includes(genero.toLowerCase());
-
-    const porNombre=artista.nombre_artistico.toLowerCase().includes(busqueda.toLowerCase());
+   const generosDelArtista=(artista.genero || "").toLowerCase().split(", ");
+   const porGenero=genero==="Todos" || generosDelArtista.includes(genero.toLowerCase());
+   const porNombre=artista.nombre_artistico.toLowerCase().includes(busqueda.toLowerCase());
     return porGenero && porNombre;
   });
 
@@ -142,12 +142,12 @@ export default function Explorar(){
             router.push(`/artista/${artista.id}`)
           }>
 
-          <View style={styles.avatar}>
-            <Ionicons
-              name="person"
-              size={24}
-              color="#FF2147"
-            />
+                    <View style={styles.avatar}>
+            {artista.foto ? (
+              <Image source={{uri: `${API_URL}${artista.foto}`}} style={styles.avatarImagen} />
+            ) : (
+              <Ionicons name="person" size={24} color="#FF2147" />
+            )}
           </View>
 
           <View style={styles.info}>
@@ -265,7 +265,13 @@ const styles=StyleSheet.create({
     backgroundColor: "#21070C",
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+
+  avatarImagen:{
+  width: "100%",
+  height: "100%",
+},
 
   info: {
     flex: 1,

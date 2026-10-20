@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, } from "react-native";
 import { API_URL } from "../../config";
 import { useAuth } from "../../context/AuthContext";
 
@@ -95,9 +95,13 @@ function confirmarEliminarCuenta(){
 
       <View style={styles.profile}>
         <View style={styles.avatar}>
-          <Text style={styles.initials}>
-            {usuario?.nombre.charAt(0).toUpperCase()}
-          </Text>
+          {usuario?.foto ? (
+  <Image source={{uri: `${API_URL}${usuario.foto}`}} style={styles.avatarImagen} />
+) : (
+  <Text style={styles.initials}>
+    {usuario?.nombre.charAt(0).toUpperCase()}
+  </Text>
+)}
         </View>
 
         <Text style={styles.name}>{usuario?.nombre}</Text>
@@ -201,7 +205,12 @@ const styles=StyleSheet.create({
     borderColor: "#FF2147",
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
+  avatarImagen:{
+  width: "100%",
+  height: "100%",
+},
   initials:{
     color: "#FF2147",
     fontSize: 30,

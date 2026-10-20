@@ -1,11 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { API_URL } from "../../config";
 import { useAuth } from "../../context/AuthContext";
 
 export default function EditarPerfil(){
-  const { usuario, actualizarUsuario } = useAuth();
+  const { usuario, actualizarUsuario, cambiarFoto } = useAuth();
   const [nombre, setNombre] = useState(usuario?.nombre || "");
   const [email, setEmail] = useState(usuario?.email || "");
   const [password, setPassword] = useState("");
@@ -17,6 +19,8 @@ export default function EditarPerfil(){
   const [canciones, setCanciones] = useState<{id?: number; titulo: string; url: string}[]>([]);
   const [cargando, setCargando] = useState(false);
   const [cargandoDatos, setCargandoDatos] = useState(usuario?.rol === "artista");
+  const [fotoNueva, setFotoNueva] = useState<string | null>(null);
+  const fotoActual=fotoNueva || (usuario?.foto ? `${API_URL}${usuario.foto}` : null);
 
   useEffect(()=>{
     if(usuario?.rol === "artista"){
@@ -110,6 +114,18 @@ function eliminarCancion(indice: number){
   setCanciones(canciones.filter((_, index)=>index !== indice));
 }
   
+async function elegirFoto(){
+  const resultado=await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ["images"],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.7,
+  });
+
+  if(!resultado.canceled){
+    setFotoNueva(resultado.assets[0].uri);
+  }
+}
 
   async function guardarCambios(){
     if(!nombre || !email){
@@ -168,6 +184,10 @@ function eliminarCancion(indice: number){
         }),
       });
 
+      if(fotoNueva){
+  await cambiarFoto(fotoNueva);
+}
+
       Alert.alert(
         "Listo",
         "Tu cuenta fue actualizada."
@@ -202,6 +222,17 @@ function eliminarCancion(indice: number){
         <Text style={styles.title}>
           Editar perfil
         </Text>
+
+        <TouchableOpacity style={styles.fotoBoton} onPress={elegirFoto}>
+  {fotoActual ? (
+    <Image source={{uri: fotoActual}} style={styles.fotoImagen} />
+  ) : (
+    <Ionicons name="camera-outline" size={32} color="#FF2147" />
+  )}
+</TouchableOpacity>
+<Text style={styles.fotoTexto}>
+  {fotoActual ? "Cambiar foto" : "Agregar foto"}
+</Text>
 
         <TextInput
           style={styles.input}
@@ -490,6 +521,30 @@ cancionContainer: {
     color: "#888888",
     textAlign: "center",
     marginTop: 18
-  }
+  },
+
+fotoBoton:{
+  width: 110,
+  height: 110,
+  borderRadius: 55,
+  backgroundColor: "#151515",
+  borderWidth: 1,
+  borderColor: "#333333",
+  alignSelf: "center",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+},
+fotoImagen:{
+  width: "100%",
+  height: "100%",
+},
+fotoTexto:{
+  color: "#888888",
+  fontSize: 12,
+  textAlign: "center",
+  marginTop: 8,
+  marginBottom: 22,
+},
 
 });
