@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, } from "react-native";
 import { API_URL } from "../../config";
 
@@ -12,10 +12,12 @@ export default function Explorar(){
   const[artistas, setArtistas]=useState<any[]>([]);
   const[cargando, setCargando]= useState(true);
 
-  useEffect(()=>{
+  useFocusEffect(
+  useCallback(() => {
     obtenerArtistas();
     obtenerGeneros();
-  }, []);
+  }, [])
+);
 
 
   const obtenerGeneros=async()=>{
@@ -142,12 +144,16 @@ export default function Explorar(){
             router.push(`/artista/${artista.id}`)
           }>
 
-                    <View style={styles.avatar}>
+        <View style={styles.avatar}>
             {artista.foto ? (
-              <Image source={{uri: `${API_URL}${artista.foto}`}} style={styles.avatarImagen} />
-            ) : (
-              <Ionicons name="person" size={24} color="#FF2147" />
-            )}
+  <Image
+    key={artista.foto}
+    source={{ uri: `${API_URL}${artista.foto}` }}
+    style={styles.avatarImagen}
+  />
+) : (
+  <Ionicons name="person" size={24} color="#FF2147" />
+)}
           </View>
 
           <View style={styles.info}>
